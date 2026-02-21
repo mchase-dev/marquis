@@ -1,0 +1,67 @@
+name: marquis
+description: "Marquis de Editeur, the Noble Markdown Editor"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.7
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management
+  flutter_riverpod: ^3.0.3
+  riverpod_annotation: ^3.0.3
+
+  # Editor
+  re_editor: ^0.8.0
+  re_highlight: ^0.0.3
+
+  # Markdown viewer
+  markdown_widget: ^2.3.2
+  flutter_highlight: ^0.7.0
+
+  # Window management
+  window_manager: ^0.5.1
+
+  # File operations
+  file_picker: ^10.3.10
+  path_provider: ^2.1.5
+  watcher: ^1.2.1
+
+  # Printing
+  printing: ^5.14.2
+  pdf: any
+  htmltopdfwidgets: ^2.0.1
+
+  # Utilities
+  url_launcher: ^6.3.1
+  app_links: ^7.0.0
+  uuid: ^4.5.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  riverpod_generator: ^3.0.3
+  build_runner: any
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/icons/
+    - assets/fonts/
+
+  fonts:
+    - family: JetBrains Mono
+      fonts:
+        - asset: assets/fonts/JetBrainsMono-Regular.ttf
+        - asset: assets/fonts/JetBrainsMono-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/JetBrainsMono-Italic.ttf
+          style: italic
+        - asset: assets/fonts/JetBrainsMono-BoldItalic.ttf
+          weight: 700
+          style: italic
