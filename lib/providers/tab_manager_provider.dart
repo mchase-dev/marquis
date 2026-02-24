@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 
@@ -279,4 +280,43 @@ class TabManager extends _$TabManager {
 
   /// Check if any documents have unsaved changes
   bool get hasUnsavedChanges => _documents.values.any((d) => d.isDirty);
+
+  /// Rename a file on disk and update the tab [DD §12 — Rename File Behavior]
+  void updateFilePath(String tabId, String newPath) {
+    final doc = _documents[tabId];
+    if (doc == null) return;
+
+    _documents[tabId] = doc.copyWith(filePath: newPath);
+    ref.read(preferencesProvider.notifier).addRecentFile(newPath);
+    state = state.copyWith(revision: state.revision + 1);
+  }
+
+  /// Open a bundled help file as a special read-only tab [DD §12 — Help Content]
+  Future<void> openHelpFile(String title, String assetPath) async {
+    // Check if already open — switch to existing tab
+    for (int i = 0; i < state.tabIds.length; i++) {
+      final doc = _documents[state.tabIds[i]];
+      if (doc?.helpTitle == title) {
+        state = state.copyWith(activeTabIndex: i);
+        return;
+      }
+    }
+
+    final content = await rootBundle.loadString(assetPath);
+    final id = _uuid.v4();
+
+    _documents[id] = DocumentState(
+      id: id,
+      content: content,
+      lastSavedContent: content,
+      isReadOnly: true,
+      helpTitle: title,
+    );
+
+    final tabIds = [...state.tabIds, id];
+    state = state.copyWith(
+      tabIds: tabIds,
+      activeTabIndex: tabIds.length - 1,
+    );
+  }
 }

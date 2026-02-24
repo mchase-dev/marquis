@@ -25,29 +25,6 @@ class AppToolbar extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          const SizedBox(width: 8),
-          // Edit mode toggle [DD §10 — Toggling Edit Mode]
-          IconButton(
-            icon: Icon(
-              viewMode == ViewMode.viewerOnly
-                  ? Icons.edit_outlined
-                  : Icons.edit,
-              size: 18,
-            ),
-            tooltip: 'Toggle Edit Mode (Ctrl+E)',
-            onPressed: () {
-              ref.read(viewModeProvider.notifier).toggleEdit();
-            },
-            visualDensity: VisualDensity.compact,
-          ),
-          const SizedBox(width: 4),
-          // Command palette — placeholder [DD §5, Phase 5]
-          IconButton(
-            icon: const Icon(Icons.terminal_outlined, size: 18),
-            tooltip: 'Command Palette (Ctrl+/)',
-            onPressed: () {},
-            visualDensity: VisualDensity.compact,
-          ),
           const Spacer(),
           // View mode selector [DD §10 — Layout Modes]
           Padding(

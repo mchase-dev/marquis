@@ -42,13 +42,16 @@ class ViewerPane extends ConsumerWidget {
 
     // Use MarkdownBlock (non-scrollable) inside our own ScrollView
     // so we can control scrolling for scroll sync [DD §10]
-    return SingleChildScrollView(
-      controller: scrollController,
-      padding: const EdgeInsets.all(24),
-      child: MarkdownBlock(
-        data: content,
-        config: config,
-        selectable: true,
+    return Align(
+      alignment: Alignment.topLeft,
+      child: SingleChildScrollView(
+        controller: scrollController,
+        padding: const EdgeInsets.fromLTRB(24, 6, 24, 24),
+        child: MarkdownBlock(
+          data: content,
+          config: config,
+          selectable: true,
+        ),
       ),
     );
   }

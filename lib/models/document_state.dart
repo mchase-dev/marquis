@@ -8,6 +8,8 @@ class DocumentState {
   final bool isEditMode;
   final bool isExternallyModified;
   final String encoding;
+  final bool isReadOnly;
+  final String? helpTitle;
 
   const DocumentState({
     required this.id,
@@ -18,6 +20,8 @@ class DocumentState {
     this.isEditMode = false,
     this.isExternallyModified = false,
     this.encoding = 'utf-8',
+    this.isReadOnly = false,
+    this.helpTitle,
   });
 
   /// Whether the document has unsaved changes [DD §6 — Dirty state]
@@ -26,8 +30,12 @@ class DocumentState {
   /// Whether this is an untitled/new file [DD §6 — New/Untitled state]
   bool get isUntitled => filePath == null;
 
+  /// Whether this is a help document [DD §12 — Help Content]
+  bool get isHelpDocument => helpTitle != null;
+
   /// Display name for tabs and title bar [DD §5, §6]
   String get displayName {
+    if (helpTitle != null) return helpTitle!;
     if (filePath != null) {
       return filePath!.split(RegExp(r'[/\\]')).last;
     }
@@ -43,6 +51,8 @@ class DocumentState {
     bool? isEditMode,
     bool? isExternallyModified,
     String? encoding,
+    bool? isReadOnly,
+    String? helpTitle,
     bool clearFilePath = false,
     bool clearLastSavedContent = false,
     bool clearLastModified = false,
@@ -60,6 +70,8 @@ class DocumentState {
       isExternallyModified:
           isExternallyModified ?? this.isExternallyModified,
       encoding: encoding ?? this.encoding,
+      isReadOnly: isReadOnly ?? this.isReadOnly,
+      helpTitle: helpTitle ?? this.helpTitle,
     );
   }
 
@@ -75,7 +87,9 @@ class DocumentState {
           lastModified == other.lastModified &&
           isEditMode == other.isEditMode &&
           isExternallyModified == other.isExternallyModified &&
-          encoding == other.encoding;
+          encoding == other.encoding &&
+          isReadOnly == other.isReadOnly &&
+          helpTitle == other.helpTitle;
 
   @override
   int get hashCode => Object.hash(
@@ -87,5 +101,7 @@ class DocumentState {
         isEditMode,
         isExternallyModified,
         encoding,
+        isReadOnly,
+        helpTitle,
       );
 }

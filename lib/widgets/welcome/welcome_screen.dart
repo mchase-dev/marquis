@@ -24,7 +24,7 @@ class WelcomeScreen extends ConsumerWidget {
           children: [
             // App name
             Text(
-              AppConstants.appName,
+              AppConstants.appFullName,
               style: theme.textTheme.displaySmall?.copyWith(
                 color: theme.colorScheme.primary,
                 fontWeight: FontWeight.w300,

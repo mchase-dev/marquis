@@ -6,8 +6,13 @@ import 'package:marquis/services/formatting_service.dart';
 /// Slim toolbar with formatting buttons shown above the editor [DD §8 — Editor Toolbar]
 class EditorToolbar extends StatelessWidget {
   final CodeLineEditingController controller;
+  final VoidCallback? onCommandPalette;
 
-  const EditorToolbar({super.key, required this.controller});
+  const EditorToolbar({
+    super.key,
+    required this.controller,
+    this.onCommandPalette,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -95,6 +100,15 @@ class EditorToolbar extends StatelessWidget {
           _divider(context),
           // Heading dropdown [DD §8 — H▼ heading dropdown]
           _HeadingDropdown(controller: controller),
+          // Command palette [DD §11 — Invocation]
+          if (onCommandPalette != null) ...[
+            _divider(context),
+            _ToolbarButton(
+              icon: const Icon(Icons.flash_on_outlined, size: 16),
+              tooltip: 'Command Palette (Ctrl+/)',
+              onPressed: onCommandPalette!,
+            ),
+          ],
         ],
       ),
     );
