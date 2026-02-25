@@ -2,14 +2,28 @@ import 'package:flutter/services.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 
+import 'package:marquis/core/file_errors.dart';
 import 'package:marquis/models/document_state.dart';
 import 'package:marquis/models/tab_state.dart';
+import 'package:marquis/providers/autosave_provider.dart';
+import 'package:marquis/providers/file_watcher_provider.dart';
 import 'package:marquis/providers/preferences_provider.dart';
 import 'package:marquis/services/file_service.dart';
 
 part 'tab_manager_provider.g.dart';
 
 const _uuid = Uuid();
+
+/// Callback for blocking error dialogs (file not found, permission denied)
+typedef FileErrorCallback = void Function(String title, String message);
+
+/// Callback for warnings that need user confirmation (large file)
+/// Returns true if the user chose to continue.
+typedef FileWarningCallback = Future<bool> Function(
+    String title, String message);
+
+/// Callback for non-blocking info notifications (encoding fallback)
+typedef FileInfoCallback = void Function(String message);
 
 /// Manages all open tabs and their documents [DD §6, §7]
 @Riverpod(keepAlive: true)
@@ -18,6 +32,11 @@ class TabManager extends _$TabManager {
   final Map<String, DocumentState> _documents = {};
 
   final FileService _fileService = FileService();
+
+  /// Callbacks set by AppShell for error/warning UI [DD §24]
+  FileErrorCallback? onError;
+  FileWarningCallback? onWarning;
+  FileInfoCallback? onInfo;
 
   @override
   TabManagerState build() {
@@ -45,7 +64,7 @@ class TabManager extends _$TabManager {
     );
   }
 
-  /// Open a file from disk [DD §7 — Lifecycle step 2, §23]
+  /// Open a file from disk [DD §7 — Lifecycle step 2, §23, §24]
   Future<void> openFile(String path) async {
     // Check if already open — switch to existing tab
     for (int i = 0; i < state.tabIds.length; i++) {
@@ -56,7 +75,26 @@ class TabManager extends _$TabManager {
       }
     }
 
-    final result = await _fileService.readFile(path);
+    ReadFileResult result;
+    try {
+      result = await _fileService.readFile(path);
+    } on FileNotFoundException {
+      onError?.call('File not found', 'File not found: $path');
+      return;
+    } on FilePermissionException {
+      onError?.call('Permission denied', 'Permission denied: $path');
+      return;
+    }
+
+    // Large file warning [DD §24]
+    if (result.isLargeFile) {
+      final proceed = await onWarning?.call(
+        'Large file',
+        'This file is very large. Editing may be slow. Continue?',
+      );
+      if (proceed != true) return;
+    }
+
     final id = _uuid.v4();
 
     _documents[id] = DocumentState(
@@ -66,6 +104,7 @@ class TabManager extends _$TabManager {
       lastSavedContent: result.content,
       lastModified: result.lastModified,
       isEditMode: false, // Opens in viewer-only mode
+      encoding: result.encoding,
     );
 
     final tabIds = [...state.tabIds, id];
@@ -74,8 +113,18 @@ class TabManager extends _$TabManager {
       activeTabIndex: tabIds.length - 1,
     );
 
+    // Encoding fallback notification [DD §24]
+    if (result.encoding != 'utf-8') {
+      onInfo?.call(
+        'File opened with ${result.encoding} encoding (not valid UTF-8).',
+      );
+    }
+
     // Track in recent files [DD Appendix C]
     ref.read(preferencesProvider.notifier).addRecentFile(path);
+
+    // Start watching for external changes [DD §15]
+    ref.read(fileWatcherProvider.notifier).watchFile(id, path);
   }
 
   /// Open file via file picker dialog [DD §23 — Opening a File]
@@ -88,7 +137,7 @@ class TabManager extends _$TabManager {
     }
   }
 
-  /// Save the active document [DD §7 — Lifecycle step 4]
+  /// Save the active document [DD §7 — Lifecycle step 4, §24]
   Future<void> saveActiveDocument() async {
     final activeId = state.activeTabId;
     if (activeId == null) return;
@@ -102,7 +151,22 @@ class TabManager extends _$TabManager {
       return;
     }
 
-    await _fileService.writeFile(doc.filePath!, doc.content);
+    // Cancel autosave timer and suppress watcher [DD §14, §15]
+    final autosave = ref.read(autosaveProvider.notifier);
+    autosave.cancelTimer(activeId);
+
+    try {
+      await _fileService.writeFile(doc.filePath!, doc.content);
+    } on FilePermissionException {
+      onError?.call('Permission denied', 'Permission denied: ${doc.filePath}');
+      return;
+    } on DiskFullException {
+      onError?.call(
+          'Disk full', 'Not enough disk space to save: ${doc.filePath}');
+      return;
+    }
+
+    autosave.state.recordWrite(doc.filePath!);
     _documents[activeId] = doc.copyWith(
       lastSavedContent: doc.content,
       lastModified: DateTime.now(),
@@ -115,7 +179,7 @@ class TabManager extends _$TabManager {
     state = state.copyWith(revision: state.revision + 1);
   }
 
-  /// Save As dialog for active document
+  /// Save As dialog for active document [DD §24]
   Future<void> saveActiveDocumentAs() async {
     final activeId = state.activeTabId;
     if (activeId == null) return;
@@ -128,7 +192,16 @@ class TabManager extends _$TabManager {
     );
     if (path == null) return;
 
-    await _fileService.writeFile(path, doc.content);
+    try {
+      await _fileService.writeFile(path, doc.content);
+    } on FilePermissionException {
+      onError?.call('Permission denied', 'Permission denied: $path');
+      return;
+    } on DiskFullException {
+      onError?.call('Disk full', 'Not enough disk space to save: $path');
+      return;
+    }
+
     _documents[activeId] = doc.copyWith(
       filePath: path,
       lastSavedContent: doc.content,
@@ -139,24 +212,49 @@ class TabManager extends _$TabManager {
     state = state.copyWith(revision: state.revision + 1);
   }
 
-  /// Save a specific document by tab ID
+  /// Save a specific document by tab ID [DD §24]
   Future<bool> saveDocument(String tabId) async {
     final doc = _documents[tabId];
     if (doc == null) return false;
+
+    final autosave = ref.read(autosaveProvider.notifier);
+    autosave.cancelTimer(tabId);
 
     if (doc.filePath == null) {
       final path = await _fileService.pickSaveAsPath(
         defaultFileName: doc.displayName,
       );
       if (path == null) return false;
-      await _fileService.writeFile(path, doc.content);
+      try {
+        await _fileService.writeFile(path, doc.content);
+      } on FilePermissionException {
+        onError?.call('Permission denied', 'Permission denied: $path');
+        return false;
+      } on DiskFullException {
+        onError?.call('Disk full', 'Not enough disk space to save: $path');
+        return false;
+      }
+      autosave.state.recordWrite(path);
       _documents[tabId] = doc.copyWith(
         filePath: path,
         lastSavedContent: doc.content,
         lastModified: DateTime.now(),
       );
+      // Start watching newly saved file
+      ref.read(fileWatcherProvider.notifier).watchFile(tabId, path);
     } else {
-      await _fileService.writeFile(doc.filePath!, doc.content);
+      try {
+        await _fileService.writeFile(doc.filePath!, doc.content);
+      } on FilePermissionException {
+        onError?.call(
+            'Permission denied', 'Permission denied: ${doc.filePath}');
+        return false;
+      } on DiskFullException {
+        onError?.call(
+            'Disk full', 'Not enough disk space to save: ${doc.filePath}');
+        return false;
+      }
+      autosave.state.recordWrite(doc.filePath!);
       _documents[tabId] = doc.copyWith(
         lastSavedContent: doc.content,
         lastModified: DateTime.now(),
@@ -175,6 +273,9 @@ class TabManager extends _$TabManager {
     _documents[tabId] = doc.copyWith(content: content);
     // Bump revision to ensure Riverpod detects the change
     state = state.copyWith(revision: state.revision + 1);
+
+    // Trigger autosave [DD §14]
+    ref.read(autosaveProvider.notifier).onContentChanged(tabId);
   }
 
   /// Toggle edit mode for a document
@@ -197,6 +298,13 @@ class TabManager extends _$TabManager {
   void closeTab(String tabId) {
     final index = state.tabIds.indexOf(tabId);
     if (index == -1) return;
+
+    final doc = _documents[tabId];
+    // Unwatch and cancel autosave timer [DD §14, §15]
+    ref.read(autosaveProvider.notifier).cancelTimer(tabId);
+    if (doc?.filePath != null) {
+      ref.read(fileWatcherProvider.notifier).unwatchFile(doc!.filePath!);
+    }
 
     _documents.remove(tabId);
 
@@ -221,7 +329,14 @@ class TabManager extends _$TabManager {
     if (keepIndex == -1) return;
 
     for (final id in state.tabIds) {
-      if (id != keepTabId) _documents.remove(id);
+      if (id != keepTabId) {
+        final doc = _documents[id];
+        ref.read(autosaveProvider.notifier).cancelTimer(id);
+        if (doc?.filePath != null) {
+          ref.read(fileWatcherProvider.notifier).unwatchFile(doc!.filePath!);
+        }
+        _documents.remove(id);
+      }
     }
 
     state = state.copyWith(
@@ -232,6 +347,14 @@ class TabManager extends _$TabManager {
 
   /// Close all tabs [DD §6 — Close All]
   void closeAllTabs() {
+    // Unwatch all files and cancel all timers
+    for (final id in state.tabIds) {
+      final doc = _documents[id];
+      if (doc?.filePath != null) {
+        ref.read(fileWatcherProvider.notifier).unwatchFile(doc!.filePath!);
+      }
+    }
+    ref.read(autosaveProvider.notifier).cancelAll();
     _documents.clear();
     state = const TabManagerState();
   }
@@ -243,6 +366,11 @@ class TabManager extends _$TabManager {
 
     final toRemove = state.tabIds.sublist(index + 1);
     for (final id in toRemove) {
+      final doc = _documents[id];
+      ref.read(autosaveProvider.notifier).cancelTimer(id);
+      if (doc?.filePath != null) {
+        ref.read(fileWatcherProvider.notifier).unwatchFile(doc!.filePath!);
+      }
       _documents.remove(id);
     }
 
@@ -289,6 +417,49 @@ class TabManager extends _$TabManager {
     _documents[tabId] = doc.copyWith(filePath: newPath);
     ref.read(preferencesProvider.notifier).addRecentFile(newPath);
     state = state.copyWith(revision: state.revision + 1);
+  }
+
+  /// Mark a document as saved (called after autosave) [DD §14]
+  void markSaved(String tabId) {
+    final doc = _documents[tabId];
+    if (doc == null) return;
+
+    _documents[tabId] = doc.copyWith(
+      lastSavedContent: doc.content,
+      lastModified: DateTime.now(),
+    );
+    state = state.copyWith(revision: state.revision + 1);
+  }
+
+  /// Reload a document from disk after external change [DD §15]
+  void reloadFromDisk(String tabId,
+      {required String content, required DateTime lastModified}) {
+    final doc = _documents[tabId];
+    if (doc == null) return;
+
+    _documents[tabId] = doc.copyWith(
+      content: content,
+      lastSavedContent: content,
+      lastModified: lastModified,
+    );
+    state = state.copyWith(revision: state.revision + 1);
+  }
+
+  /// Set externally modified flag [DD §15]
+  void setExternallyModified(String tabId, bool value) {
+    final doc = _documents[tabId];
+    if (doc == null) return;
+
+    _documents[tabId] = doc.copyWith(isExternallyModified: value);
+    state = state.copyWith(revision: state.revision + 1);
+  }
+
+  /// Reverse lookup: find tab ID by file path [DD §15]
+  String? getTabIdForPath(String path) {
+    for (final entry in _documents.entries) {
+      if (entry.value.filePath == path) return entry.key;
+    }
+    return null;
   }
 
   /// Open a bundled help file as a special read-only tab [DD §12 — Help Content]

@@ -12,7 +12,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // The app name appears in the content area placeholder
-    expect(find.text(AppConstants.appName), findsOneWidget);
+    expect(find.text(AppConstants.appFullName), findsOneWidget);
   });
 
   testWidgets('App shows toolbar and status bar', (WidgetTester tester) async {

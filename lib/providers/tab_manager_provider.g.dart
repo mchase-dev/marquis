@@ -44,7 +44,7 @@ final class TabManagerProvider
   }
 }
 
-String _$tabManagerHash() => r'8d844b1223d3a182c2c234e550ae0e5bd1625f98';
+String _$tabManagerHash() => r'fa3bbddf3e66ff9fb6a11c590ad221d7045287f3';
 
 /// Manages all open tabs and their documents [DD §6, §7]
 
