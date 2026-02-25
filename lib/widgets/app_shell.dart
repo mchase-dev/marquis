@@ -9,8 +9,10 @@ import 'package:window_manager/window_manager.dart';
 import 'package:marquis/core/constants.dart';
 import 'package:marquis/models/command_item.dart';
 import 'package:marquis/models/preferences_state.dart';
+import 'package:marquis/providers/autosave_provider.dart';
 import 'package:marquis/providers/command_palette_provider.dart';
 import 'package:marquis/providers/document_provider.dart';
+import 'package:marquis/providers/file_watcher_provider.dart';
 import 'package:marquis/providers/preferences_provider.dart';
 import 'package:marquis/providers/tab_manager_provider.dart';
 import 'package:marquis/providers/view_mode_provider.dart';
@@ -18,7 +20,11 @@ import 'package:re_editor/re_editor.dart';
 import 'package:marquis/services/formatting_service.dart';
 import 'package:marquis/widgets/command_palette/command_data.dart';
 import 'package:marquis/widgets/command_palette/command_palette.dart';
+import 'package:marquis/widgets/dialogs/conflict_dialog.dart';
+import 'package:marquis/widgets/dialogs/error_dialog.dart';
+import 'package:marquis/widgets/dialogs/file_deleted_dialog.dart';
 import 'package:marquis/widgets/dialogs/rename_dialog.dart';
+import 'package:marquis/widgets/preferences/preferences_dialog.dart';
 import 'package:marquis/widgets/dialogs/save_dialog.dart';
 import 'package:marquis/widgets/editor/editor_pane.dart';
 import 'package:marquis/widgets/editor/editor_toolbar.dart';
@@ -46,8 +52,12 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
   Offset _lastPosition = Offset.zero;
   bool _lastMaximized = false;
 
-  // Editor key for accessing the editor controller
+  // Editor/viewer keys for accessing state
   final _editorKey = GlobalKey<EditorPaneState>();
+  final _viewerKey = GlobalKey<ViewerPaneState>();
+
+  // Tracks which pane last received a pointer-down (for context-sensitive find)
+  bool _viewerHasFocus = false;
 
   // Scroll controllers for sync [DD §10 — Scroll Synchronization]
   final _viewerScrollController = ScrollController();
@@ -63,6 +73,24 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
     _editorVerticalScroller.addListener(_onEditorScroll);
     _viewerScrollController.addListener(_onViewerScroll);
     HardwareKeyboard.instance.addHandler(_handleGlobalKeyEvent);
+
+    // Register file watcher callback for conflict/deletion dialogs [DD §15]
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(fileWatcherProvider.notifier).onFileEvent = _onFileEvent;
+      ref.read(fileWatcherProvider.notifier).onFileReloaded = _onFileReloaded;
+
+      // Register error callbacks for file operations [DD §24]
+      final tabManager = ref.read(tabManagerProvider.notifier);
+      tabManager.onError = _onFileError;
+      tabManager.onWarning = _onFileWarning;
+      tabManager.onInfo = _showInfoSnackBar;
+      ref.read(autosaveProvider.notifier).onSaveError = _onSaveError;
+
+      // Listen for tab switches to trigger autosave [DD §14]
+      ref.listenManual(tabManagerProvider.select((s) => s.activeTabIndex), (_, _) {
+        ref.read(autosaveProvider.notifier).saveAllDirty();
+      });
+    });
   }
 
   @override
@@ -161,6 +189,7 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
   void onWindowClose() async {
     _isClosing = true;
     _saveWindowStateTimer?.cancel();
+    ref.read(autosaveProvider.notifier).cancelAll();
 
     final tabManager = ref.read(tabManagerProvider.notifier);
     if (tabManager.hasUnsavedChanges) {
@@ -199,6 +228,12 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
 
   @override
   void onWindowMoved() => _debouncedSaveWindowState();
+
+  @override
+  void onWindowBlur() {
+    // Auto-save all dirty documents when window loses focus [DD §14]
+    ref.read(autosaveProvider.notifier).saveAllDirty();
+  }
 
   // ---------------------------------------------------------------------------
   // Action handlers (shared between menu, command palette, and shortcuts)
@@ -280,15 +315,64 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
   }
 
   void _onFind() {
-    // TODO: Phase 6 — Find & Replace
+    // Context-sensitive find [DD §16]
+    final viewMode = ref.read(viewModeProvider);
+    final activeDoc = ref.read(activeDocumentProvider);
+    // Compute effective view mode (same logic as build)
+    final effectiveViewMode = (activeDoc != null &&
+            !activeDoc.isReadOnly &&
+            activeDoc.isEditMode &&
+            viewMode == ViewMode.viewerOnly)
+        ? ViewMode.split
+        : (activeDoc != null && activeDoc.isReadOnly)
+            ? ViewMode.viewerOnly
+            : viewMode;
+
+    if (effectiveViewMode == ViewMode.viewerOnly ||
+        (effectiveViewMode == ViewMode.split && _viewerHasFocus)) {
+      // Viewer context → viewer find bar
+      _viewerKey.currentState?.showFind();
+    } else {
+      // Editor context → ensure editor visible, open editor find
+      if (viewMode == ViewMode.viewerOnly) {
+        ref.read(viewModeProvider.notifier).toggleEdit();
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _editorKey.currentState?.showFind();
+      });
+    }
   }
 
   void _onFindReplace() {
-    // TODO: Phase 6 — Find & Replace
+    // Context-sensitive find/replace [DD §16]
+    final viewMode = ref.read(viewModeProvider);
+    final activeDoc = ref.read(activeDocumentProvider);
+    final effectiveViewMode = (activeDoc != null &&
+            !activeDoc.isReadOnly &&
+            activeDoc.isEditMode &&
+            viewMode == ViewMode.viewerOnly)
+        ? ViewMode.split
+        : (activeDoc != null && activeDoc.isReadOnly)
+            ? ViewMode.viewerOnly
+            : viewMode;
+
+    if (effectiveViewMode == ViewMode.viewerOnly ||
+        (effectiveViewMode == ViewMode.split && _viewerHasFocus)) {
+      // Viewer has no replace — just open find
+      _viewerKey.currentState?.showFind();
+    } else {
+      // Editor context → find+replace
+      if (viewMode == ViewMode.viewerOnly) {
+        ref.read(viewModeProvider.notifier).toggleEdit();
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _editorKey.currentState?.showFindReplace();
+      });
+    }
   }
 
   void _onPreferences() {
-    // TODO: Phase 7 — Preferences dialog
+    PreferencesDialog.show(context);
   }
 
   void _onPrint() {
@@ -382,6 +466,95 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
 
   void _quit() {
     onWindowClose();
+  }
+
+  // ---------------------------------------------------------------------------
+  // File watcher conflict/deletion handling [DD §15]
+  // ---------------------------------------------------------------------------
+
+  void _onFileReloaded(String fileName) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('"$fileName" was updated from disk.'),
+        duration: const Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+        width: 360,
+      ),
+    );
+  }
+
+  void _onFileEvent(String tabId, {required bool isDeleted}) {
+    if (!mounted) return;
+    final tabManager = ref.read(tabManagerProvider.notifier);
+    final doc = tabManager.getDocument(tabId);
+    if (doc == null) return;
+
+    if (isDeleted) {
+      _showFileDeletedDialog(tabId, doc.displayName);
+    } else {
+      _showConflictDialog(tabId, doc.displayName);
+    }
+  }
+
+  Future<void> _showConflictDialog(String tabId, String fileName) async {
+    final result = await ConflictDialog.show(context, fileName: fileName);
+    if (result == null) return;
+
+    if (result == ConflictDialogResult.reload) {
+      await ref.read(fileWatcherProvider.notifier).reloadFromDisk(tabId);
+    }
+    // keepLocal — do nothing, keep the local version
+  }
+
+  Future<void> _showFileDeletedDialog(String tabId, String fileName) async {
+    final result = await FileDeletedDialog.show(context, fileName: fileName);
+    if (result == null) return;
+
+    final tabManager = ref.read(tabManagerProvider.notifier);
+    switch (result) {
+      case FileDeletedResult.closeTab:
+        tabManager.closeTab(tabId);
+      case FileDeletedResult.saveAs:
+        await tabManager.saveDocument(tabId);
+      case FileDeletedResult.saveToOriginal:
+        final doc = tabManager.getDocument(tabId);
+        if (doc?.filePath != null) {
+          await File(doc!.filePath!).writeAsString(doc.content);
+          tabManager.markSaved(tabId);
+        }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // File operation error handling [DD §24]
+  // ---------------------------------------------------------------------------
+
+  void _onFileError(String title, String message) {
+    if (!mounted) return;
+    ErrorDialog.show(context, title: title, message: message);
+  }
+
+  Future<bool> _onFileWarning(String title, String message) async {
+    if (!mounted) return false;
+    return ErrorDialog.showWarning(context, title: title, message: message);
+  }
+
+  void _onSaveError(String fileName, String message) {
+    if (!mounted) return;
+    _showInfoSnackBar(message);
+  }
+
+  void _showInfoSnackBar(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 4),
+        behavior: SnackBarBehavior.floating,
+        width: 400,
+      ),
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -610,23 +783,30 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
             child: tabState.hasTabs && activeDoc != null
                 ? SplitView(
                     viewMode: effectiveViewMode,
-                    editor: EditorPane(
-                      key: _editorKey,
-                      content: activeDoc.content,
-                      tabId: activeDoc.id,
-                      onChanged: (content) {
-                        ref.read(tabManagerProvider.notifier)
-                            .updateContent(activeDoc.id, content);
-                      },
-                      scrollController: CodeScrollController(
-                        verticalScroller: _editorVerticalScroller,
-                        horizontalScroller: ScrollController(),
+                    editor: Listener(
+                      onPointerDown: (_) => _viewerHasFocus = false,
+                      child: EditorPane(
+                        key: _editorKey,
+                        content: activeDoc.content,
+                        tabId: activeDoc.id,
+                        onChanged: (content) {
+                          ref.read(tabManagerProvider.notifier)
+                              .updateContent(activeDoc.id, content);
+                        },
+                        scrollController: CodeScrollController(
+                          verticalScroller: _editorVerticalScroller,
+                          horizontalScroller: ScrollController(),
+                        ),
                       ),
                     ),
-                    viewer: ViewerPane(
-                      content: activeDoc.content,
-                      filePath: activeDoc.filePath,
-                      scrollController: _viewerScrollController,
+                    viewer: Listener(
+                      onPointerDown: (_) => _viewerHasFocus = true,
+                      child: ViewerPane(
+                        key: _viewerKey,
+                        content: activeDoc.content,
+                        filePath: activeDoc.filePath,
+                        scrollController: _viewerScrollController,
+                      ),
                     ),
                   )
                 : const WelcomeScreen(),

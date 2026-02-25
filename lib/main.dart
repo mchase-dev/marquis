@@ -7,6 +7,14 @@ import 'package:marquis/core/constants.dart';
 import 'package:marquis/services/preferences_service.dart';
 
 void main() async {
+  // Suppress known markdown_widget debugPrint noise for code blocks
+  // without a language class attribute.
+  final defaultDebugPrint = debugPrint;
+  debugPrint = (String? message, {int? wrapWidth}) {
+    if (message != null && message.startsWith('get language error:')) return;
+    defaultDebugPrint(message, wrapWidth: wrapWidth);
+  };
+
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
 
