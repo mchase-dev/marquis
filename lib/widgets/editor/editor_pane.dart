@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:re_editor/re_editor.dart';
 import 'package:re_highlight/languages/markdown.dart';
-import 'package:re_highlight/languages/xml.dart';
 import 'package:re_highlight/styles/atom-one-light.dart';
 import 'package:re_highlight/styles/atom-one-dark.dart';
 
+import 'package:marquis/providers/cursor_position_provider.dart';
 import 'package:marquis/providers/preferences_provider.dart';
 import 'package:marquis/theme/editor_theme.dart';
+import 'package:marquis/widgets/editor/find_replace_bar.dart';
 
 /// Markdown source editor using re_editor [DD §8]
 class EditorPane extends ConsumerStatefulWidget {
@@ -31,10 +32,16 @@ class EditorPane extends ConsumerStatefulWidget {
 class EditorPaneState extends ConsumerState<EditorPane> {
   late CodeLineEditingController _controller;
   late CodeScrollController _scrollController;
+  late CodeFindController _findController;
   bool _isExternalUpdate = false;
+  bool _showFindBar = false;
+  bool _showReplace = false;
 
   /// Expose controller for formatting shortcuts
   CodeLineEditingController get controller => _controller;
+
+  /// Expose find controller
+  CodeFindController get findController => _findController;
 
   @override
   void initState() {
@@ -45,10 +52,14 @@ class EditorPaneState extends ConsumerState<EditorPane> {
           verticalScroller: ScrollController(),
           horizontalScroller: ScrollController(),
         );
+    _findController = CodeFindController(_controller);
+    _controller.addListener(_onCursorChanged);
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_onCursorChanged);
+    _findController.dispose();
     _controller.dispose();
     if (widget.scrollController == null) {
       _scrollController.dispose();
@@ -68,6 +79,54 @@ class EditorPaneState extends ConsumerState<EditorPane> {
     }
   }
 
+  void _onCursorChanged() {
+    // Defer provider update — this listener can fire during the widget tree
+    // build (e.g. CodeEditor.initState sets its delegate), which would violate
+    // Riverpod's "no modifications during build" rule.
+    Future(() {
+      if (!mounted) return;
+      final selection = _controller.selection;
+      // Line is 0-based in re_editor, display as 1-based
+      ref.read(cursorPositionProvider.notifier).update(
+        selection.extentIndex + 1,
+        selection.extentOffset + 1,
+      );
+    });
+  }
+
+  /// Open find bar (Ctrl+F) [DD §16]
+  void showFind() {
+    setState(() {
+      _showFindBar = true;
+      _showReplace = false;
+    });
+    _findController.findMode();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _findController.focusOnFindInput();
+    });
+  }
+
+  /// Open find & replace bar (Ctrl+H) [DD §16]
+  void showFindReplace() {
+    setState(() {
+      _showFindBar = true;
+      _showReplace = true;
+    });
+    _findController.replaceMode();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _findController.focusOnFindInput();
+    });
+  }
+
+  /// Close find bar
+  void closeFindBar() {
+    setState(() {
+      _showFindBar = false;
+      _showReplace = false;
+    });
+    _findController.close();
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -85,29 +144,42 @@ class EditorPaneState extends ConsumerState<EditorPane> {
       highlightActiveLine: highlightActiveLine,
     );
 
-    return CodeEditor(
-      controller: _controller,
-      scrollController: _scrollController,
-      style: style,
-      wordWrap: wordWrap,
-      autofocus: false,
-      onChanged: (_) {
-        if (!_isExternalUpdate) {
-          widget.onChanged(_controller.text);
-        }
-      },
-      indicatorBuilder: showLineNumbers
-          ? (context, editingController, chunkController, notifier) {
-              return DefaultCodeLineNumber(
-                controller: editingController,
-                notifier: notifier,
-              );
-            }
-          : null,
-      chunkAnalyzer: const NonCodeChunkAnalyzer(),
-      sperator: showLineNumbers
-          ? Container(width: 1, color: isDark ? EditorTheme.darkGutterText.withValues(alpha: 0.3) : EditorTheme.lightGutterText.withValues(alpha: 0.3))
-          : null,
+    return Column(
+      children: [
+        if (_showFindBar)
+          FindReplaceBar(
+            findController: _findController,
+            showReplace: _showReplace,
+            onClose: closeFindBar,
+          ),
+        Expanded(
+          child: CodeEditor(
+            controller: _controller,
+            scrollController: _scrollController,
+            findController: _findController,
+            style: style,
+            wordWrap: wordWrap,
+            autofocus: false,
+            onChanged: (_) {
+              if (!_isExternalUpdate) {
+                widget.onChanged(_controller.text);
+              }
+            },
+            indicatorBuilder: showLineNumbers
+                ? (context, editingController, chunkController, notifier) {
+                    return DefaultCodeLineNumber(
+                      controller: editingController,
+                      notifier: notifier,
+                    );
+                  }
+                : null,
+            chunkAnalyzer: const NonCodeChunkAnalyzer(),
+            sperator: showLineNumbers
+                ? Container(width: 1, color: isDark ? EditorTheme.darkGutterText.withValues(alpha: 0.3) : EditorTheme.lightGutterText.withValues(alpha: 0.3))
+                : null,
+          ),
+        ),
+      ],
     );
   }
 
@@ -136,7 +208,6 @@ class EditorPaneState extends ConsumerState<EditorPane> {
       codeTheme: CodeHighlightTheme(
         languages: {
           'markdown': CodeHighlightThemeMode(mode: langMarkdown),
-          'xml': CodeHighlightThemeMode(mode: langXml),
         },
         theme: isDark ? atomOneDarkTheme : atomOneLightTheme,
       ),
