@@ -18,61 +18,64 @@ class WelcomeScreen extends ConsumerWidget {
     final recentFiles = prefs?.general.recentFiles ?? [];
 
     return Center(
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // App name
-            Text(
-              AppConstants.appFullName,
-              style: theme.textTheme.displaySmall?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w300,
-              ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // App name
+          Text(
+            AppConstants.appFullName,
+            style: theme.textTheme.displaySmall?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w300,
             ),
-            const SizedBox(height: 4),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'The Noble Markdown Editor',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 40),
+          // Action buttons
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _ActionButton(
+                icon: Icons.note_add_outlined,
+                label: 'New File',
+                shortcut: 'Ctrl+N',
+                onPressed: () =>
+                    ref.read(tabManagerProvider.notifier).newFile(),
+              ),
+              const SizedBox(width: 16),
+              _ActionButton(
+                icon: Icons.folder_open_outlined,
+                label: 'Open File',
+                shortcut: 'Ctrl+O',
+                onPressed: () =>
+                    ref.read(tabManagerProvider.notifier).openFileDialog(),
+              ),
+            ],
+          ),
+          // Recent files
+          if (recentFiles.isNotEmpty) ...[
+            const SizedBox(height: 40),
             Text(
-              'The Noble Markdown Editor',
-              style: theme.textTheme.bodyMedium?.copyWith(
+              'Recent Files',
+              style: theme.textTheme.titleSmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: 40),
-            // Action buttons
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _ActionButton(
-                  icon: Icons.note_add_outlined,
-                  label: 'New File',
-                  shortcut: 'Ctrl+N',
-                  onPressed: () =>
-                      ref.read(tabManagerProvider.notifier).newFile(),
-                ),
-                const SizedBox(width: 16),
-                _ActionButton(
-                  icon: Icons.folder_open_outlined,
-                  label: 'Open File',
-                  shortcut: 'Ctrl+O',
-                  onPressed: () =>
-                      ref.read(tabManagerProvider.notifier).openFileDialog(),
-                ),
-              ],
-            ),
-            // Recent files
-            if (recentFiles.isNotEmpty) ...[
-              const SizedBox(height: 40),
-              Text(
-                'Recent Files',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 12),
-              ConstrainedBox(
+            const SizedBox(height: 12),
+            Flexible(
+              child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 400),
-                child: Column(
-                  children: recentFiles.map((path) {
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: recentFiles.length,
+                  itemBuilder: (context, index) {
+                    final path = recentFiles[index];
                     final fileName = path.split(RegExp(r'[/\\]')).last;
                     return ListTile(
                       dense: true,
@@ -94,7 +97,6 @@ class WelcomeScreen extends ConsumerWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       onTap: () async {
-                        // Check if file still exists
                         if (await File(path).exists()) {
                           ref
                               .read(tabManagerProvider.notifier)
@@ -113,15 +115,15 @@ class WelcomeScreen extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(4),
                       ),
                     );
-                  }).toList(),
+                  },
                 ),
               ),
-            ],
-            // Shortcut hints
-            const SizedBox(height: 40),
-            _ShortcutHints(),
+            ),
           ],
-        ),
+          // Shortcut hints
+          const SizedBox(height: 40),
+          _ShortcutHints(),
+        ],
       ),
     );
   }
