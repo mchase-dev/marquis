@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:marquis/providers/cursor_position_provider.dart';
 import 'package:marquis/providers/document_provider.dart';
+import 'package:marquis/providers/hovered_link_provider.dart';
 import 'package:marquis/providers/save_status_provider.dart';
 import 'package:marquis/providers/view_mode_provider.dart';
 
@@ -17,6 +18,7 @@ class StatusBar extends ConsumerWidget {
     final saveStatus = ref.watch(saveStatusProvider);
     final viewMode = ref.watch(viewModeProvider);
     final cursorPos = ref.watch(cursorPositionProvider);
+    final hoveredLink = ref.watch(hoveredLinkProvider);
 
     final labelStyle = theme.textTheme.labelSmall?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
@@ -51,8 +53,22 @@ class StatusBar extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Row(
         children: [
-          Text(saveStatus.label, style: labelStyle),
-          const Spacer(),
+          if (hoveredLink != null)
+            Expanded(
+              child: Text(
+                hoveredLink,
+                style: labelStyle?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant
+                      .withValues(alpha: 0.7),
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            )
+          else ...[
+            Text(saveStatus.label, style: labelStyle),
+            const Spacer(),
+          ],
           if (wordCount != null) ...[
             Text(wordCount, style: labelStyle),
             _separator(theme),

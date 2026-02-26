@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:re_editor/re_editor.dart';
 
+import 'package:marquis/providers/show_viewer_images_provider.dart';
 import 'package:marquis/services/formatting_service.dart';
 
 /// Slim toolbar with formatting buttons shown above the editor [DD §8 — Editor Toolbar]
-class EditorToolbar extends StatelessWidget {
+class EditorToolbar extends ConsumerWidget {
   final CodeLineEditingController controller;
   final VoidCallback? onCommandPalette;
 
@@ -15,8 +17,9 @@ class EditorToolbar extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final showImages = ref.watch(showViewerImagesProvider);
 
     return Container(
       height: 36,
@@ -109,6 +112,20 @@ class EditorToolbar extends StatelessWidget {
               onPressed: onCommandPalette!,
             ),
           ],
+          const Spacer(),
+          _divider(context),
+          _ToolbarButton(
+            icon: Icon(
+              showImages ? Icons.image : Icons.hide_image,
+              size: 16,
+            ),
+            tooltip: showImages
+                ? 'Hide images in viewer'
+                : 'Show images in viewer',
+            onPressed: () =>
+                ref.read(showViewerImagesProvider.notifier).toggle(),
+          ),
+          const SizedBox(width: 4),
         ],
       ),
     );
