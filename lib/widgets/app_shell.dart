@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'package:desktop_drop/desktop_drop.dart';
 import 'package:marquis/core/constants.dart';
 import 'package:marquis/models/command_item.dart';
 import 'package:marquis/models/preferences_state.dart';
@@ -18,6 +19,7 @@ import 'package:marquis/providers/tab_manager_provider.dart';
 import 'package:marquis/providers/view_mode_provider.dart';
 import 'package:re_editor/re_editor.dart';
 import 'package:marquis/services/formatting_service.dart';
+import 'package:marquis/services/print_service.dart';
 import 'package:marquis/widgets/command_palette/command_data.dart';
 import 'package:marquis/widgets/command_palette/command_palette.dart';
 import 'package:marquis/widgets/dialogs/conflict_dialog.dart';
@@ -375,8 +377,24 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
     PreferencesDialog.show(context);
   }
 
-  void _onPrint() {
-    // TODO: Phase 7 — Printing
+  Future<void> _onPrint() async {
+    final activeDoc = ref.read(activeDocumentProvider);
+    if (activeDoc == null) return;
+
+    final prefs = ref.read(preferencesProvider).value;
+    final fontSize = prefs?.appearance.viewerFontSize.toDouble() ?? 16;
+
+    try {
+      await PrintService.printDocument(
+        content: activeDoc.content,
+        documentName: activeDoc.displayName,
+        filePath: activeDoc.filePath,
+        fontSize: fontSize,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      _showInfoSnackBar('Print failed: $e');
+    }
   }
 
   Future<void> _onRename() async {
@@ -837,17 +855,27 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
       child: scaffold,
     );
 
-    return Stack(
-      children: [
-        withMenuBar,
-        // Command palette overlay [DD §11]
-        if (paletteState.isOpen)
-          CommandPalette(
-            commands: _buildCommandList(),
-            onSelect: _onCommandSelected,
-            onClose: () => ref.read(commandPaletteProvider.notifier).close(),
-          ),
-      ],
+    return DropTarget(
+      onDragDone: (details) {
+        for (final file in details.files) {
+          final path = file.path;
+          if (path.endsWith('.md') || path.endsWith('.markdown')) {
+            ref.read(tabManagerProvider.notifier).openFile(path);
+          }
+        }
+      },
+      child: Stack(
+        children: [
+          withMenuBar,
+          // Command palette overlay [DD §11]
+          if (paletteState.isOpen)
+            CommandPalette(
+              commands: _buildCommandList(),
+              onSelect: _onCommandSelected,
+              onClose: () => ref.read(commandPaletteProvider.notifier).close(),
+            ),
+        ],
+      ),
     );
   }
 
