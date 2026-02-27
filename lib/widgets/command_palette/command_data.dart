@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'package:marquis/models/command_item.dart';
@@ -175,6 +177,7 @@ class CommandData {
     required VoidCallback onPreferences,
     required VoidCallback onToggleTheme,
     required VoidCallback onPrint,
+    required VoidCallback onExportPdf,
     required VoidCallback onAbout,
   }) {
     return [
@@ -258,12 +261,21 @@ class CommandData {
         action: onToggleTheme,
       ),
       CommandItem(
-        name: 'Print',
-        description: 'Print the current document',
-        icon: Icons.print_outlined,
+        name: Platform.isWindows ? 'View as PDF' : 'Print',
+        description: Platform.isWindows
+            ? 'View the current document as PDF'
+            : 'Print the current document',
+        icon: Platform.isWindows ? Icons.picture_as_pdf_outlined : Icons.print_outlined,
         shortcut: 'Ctrl+P',
         category: CommandCategory.file,
         action: onPrint,
+      ),
+      CommandItem(
+        name: 'Export to PDF',
+        description: 'Save the current document as a PDF file',
+        icon: Icons.picture_as_pdf_outlined,
+        category: CommandCategory.file,
+        action: onExportPdf,
       ),
       CommandItem(
         name: 'About Marquis',

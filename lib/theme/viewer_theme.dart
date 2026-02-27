@@ -13,7 +13,8 @@ class ViewerTheme {
       PConfig(textStyle: TextStyle(fontSize: fontSize)),
       PreConfig(
         theme: githubTheme,
-        textStyle: TextStyle(fontSize: fontSize - 2),
+        textStyle: TextStyle(fontSize: fontSize - 2, fontFamily: 'JetBrains Mono'),
+        styleNotMatched: const TextStyle(),
         decoration: const BoxDecoration(
           color: Color(0xFFF6F8FA),
           borderRadius: BorderRadius.all(Radius.circular(8)),
@@ -33,7 +34,8 @@ class ViewerTheme {
       ),
       PreConfig(
         theme: monokaiSublimeTheme,
-        textStyle: TextStyle(fontSize: fontSize - 2),
+        textStyle: TextStyle(fontSize: fontSize - 2, fontFamily: 'JetBrains Mono'),
+        styleNotMatched: const TextStyle(),
         decoration: const BoxDecoration(
           color: Color(0xFF272822),
           borderRadius: BorderRadius.all(Radius.circular(8)),

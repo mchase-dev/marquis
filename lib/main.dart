@@ -6,12 +6,24 @@ import 'package:marquis/app.dart';
 import 'package:marquis/core/constants.dart';
 import 'package:marquis/services/preferences_service.dart';
 
-void main() async {
-  // Suppress known markdown_widget debugPrint noise for code blocks
-  // without a language class attribute.
+/// Command-line arguments passed at launch, used for cold-start file open [DD §19]
+List<String> initialArgs = const [];
+
+void main(List<String> args) async {
+  initialArgs = args;
+  // Suppress known debug noise from dependencies
   final defaultDebugPrint = debugPrint;
   debugPrint = (String? message, {int? wrapWidth}) {
-    if (message != null && message.startsWith('get language error:')) return;
+    if (message == null) {
+      defaultDebugPrint(message, wrapWidth: wrapWidth);
+      return;
+    }
+    // markdown_widget: code blocks without a language class
+    if (message.startsWith('get language error:')) return;
+    // pdf: built-in Helvetica has no Unicode tables
+    if (message.contains('has no Unicode support')) return;
+    // pdf: missing glyphs (emoji, uncommon symbols)
+    if (message.startsWith('Unable to find a font to draw')) return;
     defaultDebugPrint(message, wrapWidth: wrapWidth);
   };
 

@@ -10,6 +10,8 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:marquis/core/constants.dart';
 import 'package:marquis/models/command_item.dart';
 import 'package:marquis/models/preferences_state.dart';
+import 'package:marquis/main.dart' show initialArgs;
+import 'package:marquis/providers/app_links_provider.dart';
 import 'package:marquis/providers/autosave_provider.dart';
 import 'package:marquis/providers/command_palette_provider.dart';
 import 'package:marquis/providers/document_provider.dart';
@@ -92,6 +94,9 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
       ref.listenManual(tabManagerProvider.select((s) => s.activeTabIndex), (_, _) {
         ref.read(autosaveProvider.notifier).saveAllDirty();
       });
+
+      // Initialize app_links for single-instance file open [DD §19]
+      ref.read(appLinksProvider.notifier).init(initialArgs);
     });
   }
 
@@ -377,6 +382,26 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
     PreferencesDialog.show(context);
   }
 
+  Future<void> _onExportPdf() async {
+    final activeDoc = ref.read(activeDocumentProvider);
+    if (activeDoc == null) return;
+
+    final prefs = ref.read(preferencesProvider).value;
+    final fontSize = prefs?.appearance.viewerFontSize.toDouble() ?? 16;
+
+    try {
+      await PrintService.exportToPdf(
+        content: activeDoc.content,
+        documentName: activeDoc.displayName,
+        filePath: activeDoc.filePath,
+        fontSize: fontSize,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      _showInfoSnackBar('Export failed: $e');
+    }
+  }
+
   Future<void> _onPrint() async {
     final activeDoc = ref.read(activeDocumentProvider);
     if (activeDoc == null) return;
@@ -615,6 +640,7 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
         onPreferences: _onPreferences,
         onToggleTheme: _toggleTheme,
         onPrint: _onPrint,
+        onExportPdf: _onExportPdf,
         onAbout: _onAbout,
       ),
     ];
@@ -835,12 +861,15 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
     );
 
     // Wrap with menu bar
+    // Edit operations — enabled only when a document is open
+    final hasDoc = activeDoc != null;
     final withMenuBar = AppMenuBar(
       onCommandPalette: _toggleCommandPalette,
       onFind: _onFind,
       onFindReplace: _onFindReplace,
       onPreferences: _onPreferences,
       onPrint: _onPrint,
+      onExportPdf: _onExportPdf,
       onRename: _onRename,
       onAbout: _onAbout,
       onUserGuide: _onUserGuide,
@@ -852,6 +881,12 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
       onCloseTab: _closeActiveTab,
       onCloseAllTabs: _closeAllTabs,
       onQuit: _quit,
+      onUndo: hasDoc ? () => _editorKey.currentState?.controller.undo() : null,
+      onRedo: hasDoc ? () => _editorKey.currentState?.controller.redo() : null,
+      onCut: hasDoc ? () => _editorKey.currentState?.controller.cut() : null,
+      onCopy: hasDoc ? () => _editorKey.currentState?.controller.copy() : null,
+      onPaste: hasDoc ? () => _editorKey.currentState?.controller.paste() : null,
+      onSelectAll: hasDoc ? () => _editorKey.currentState?.controller.selectAll() : null,
       child: scaffold,
     );
 

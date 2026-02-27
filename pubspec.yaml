@@ -33,7 +33,6 @@ dependencies:
   # Printing
   printing: ^5.14.2
   pdf: any
-  htmltopdfwidgets: ^2.0.1
   markdown: ^7.3.0
 
   # Drag-and-drop

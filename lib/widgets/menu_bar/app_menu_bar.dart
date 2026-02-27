@@ -19,6 +19,7 @@ class AppMenuBar extends ConsumerWidget {
   final VoidCallback onFindReplace;
   final VoidCallback onPreferences;
   final VoidCallback onPrint;
+  final VoidCallback onExportPdf;
   final VoidCallback onRename;
   final VoidCallback onAbout;
   final VoidCallback onUserGuide;
@@ -30,6 +31,12 @@ class AppMenuBar extends ConsumerWidget {
   final VoidCallback onCloseTab;
   final VoidCallback onCloseAllTabs;
   final VoidCallback onQuit;
+  final VoidCallback? onUndo;
+  final VoidCallback? onRedo;
+  final VoidCallback? onCut;
+  final VoidCallback? onCopy;
+  final VoidCallback? onPaste;
+  final VoidCallback? onSelectAll;
 
   const AppMenuBar({
     super.key,
@@ -39,6 +46,7 @@ class AppMenuBar extends ConsumerWidget {
     required this.onFindReplace,
     required this.onPreferences,
     required this.onPrint,
+    required this.onExportPdf,
     required this.onRename,
     required this.onAbout,
     required this.onUserGuide,
@@ -50,6 +58,12 @@ class AppMenuBar extends ConsumerWidget {
     required this.onCloseTab,
     required this.onCloseAllTabs,
     required this.onQuit,
+    this.onUndo,
+    this.onRedo,
+    this.onCut,
+    this.onCopy,
+    this.onPaste,
+    this.onSelectAll,
   });
 
   @override
@@ -66,6 +80,7 @@ class AppMenuBar extends ConsumerWidget {
     final viewModeNotifier = ref.read(viewModeProvider.notifier);
     final viewMode = ref.watch(viewModeProvider);
     final recentFiles = ref.watch(preferencesProvider).value?.general.recentFiles ?? [];
+    final hasActiveTab = ref.watch(tabManagerProvider).hasTabs;
 
     return PlatformMenuBar(
       menus: [
@@ -124,34 +139,38 @@ class AppMenuBar extends ConsumerWidget {
             PlatformMenuItem(
               label: 'Save',
               shortcut: const SingleActivator(LogicalKeyboardKey.keyS, meta: true),
-              onSelected: () => tabManager.saveActiveDocument(),
+              onSelected: hasActiveTab ? () => tabManager.saveActiveDocument() : null,
             ),
             PlatformMenuItem(
               label: 'Save As...',
               shortcut: const SingleActivator(LogicalKeyboardKey.keyS, meta: true, shift: true),
-              onSelected: () => tabManager.saveActiveDocumentAs(),
+              onSelected: hasActiveTab ? () => tabManager.saveActiveDocumentAs() : null,
             ),
             PlatformMenuItem(
               label: 'Rename...',
               shortcut: const SingleActivator(LogicalKeyboardKey.f2),
-              onSelected: onRename,
+              onSelected: hasActiveTab ? onRename : null,
             ),
             const PlatformMenuItemGroup(members: []),
             PlatformMenuItem(
               label: 'Close Tab',
               shortcut: const SingleActivator(LogicalKeyboardKey.keyW, meta: true),
-              onSelected: onCloseTab,
+              onSelected: hasActiveTab ? onCloseTab : null,
             ),
             PlatformMenuItem(
               label: 'Close All Tabs',
               shortcut: const SingleActivator(LogicalKeyboardKey.keyW, meta: true, shift: true),
-              onSelected: onCloseAllTabs,
+              onSelected: hasActiveTab ? onCloseAllTabs : null,
             ),
             const PlatformMenuItemGroup(members: []),
             PlatformMenuItem(
               label: 'Print...',
               shortcut: const SingleActivator(LogicalKeyboardKey.keyP, meta: true),
-              onSelected: onPrint,
+              onSelected: hasActiveTab ? onPrint : null,
+            ),
+            PlatformMenuItem(
+              label: 'Export to PDF...',
+              onSelected: hasActiveTab ? onExportPdf : null,
             ),
           ],
         ),
@@ -168,33 +187,33 @@ class AppMenuBar extends ConsumerWidget {
             PlatformMenuItem(
               label: 'Undo',
               shortcut: const SingleActivator(LogicalKeyboardKey.keyZ, meta: true),
-              onSelected: null, // Handled by re_editor
+              onSelected: onUndo,
             ),
             PlatformMenuItem(
               label: 'Redo',
               shortcut: const SingleActivator(LogicalKeyboardKey.keyZ, meta: true, shift: true),
-              onSelected: null,
+              onSelected: onRedo,
             ),
             const PlatformMenuItemGroup(members: []),
             PlatformMenuItem(
               label: 'Cut',
               shortcut: const SingleActivator(LogicalKeyboardKey.keyX, meta: true),
-              onSelected: null,
+              onSelected: onCut,
             ),
             PlatformMenuItem(
               label: 'Copy',
               shortcut: const SingleActivator(LogicalKeyboardKey.keyC, meta: true),
-              onSelected: null,
+              onSelected: onCopy,
             ),
             PlatformMenuItem(
               label: 'Paste',
               shortcut: const SingleActivator(LogicalKeyboardKey.keyV, meta: true),
-              onSelected: null,
+              onSelected: onPaste,
             ),
             PlatformMenuItem(
               label: 'Select All',
               shortcut: const SingleActivator(LogicalKeyboardKey.keyA, meta: true),
-              onSelected: null,
+              onSelected: onSelectAll,
             ),
             const PlatformMenuItemGroup(members: []),
             PlatformMenuItem(
@@ -211,12 +230,12 @@ class AppMenuBar extends ConsumerWidget {
             PlatformMenuItem(
               label: 'Find...',
               shortcut: const SingleActivator(LogicalKeyboardKey.keyF, meta: true),
-              onSelected: onFind,
+              onSelected: hasActiveTab ? onFind : null,
             ),
             PlatformMenuItem(
               label: 'Find & Replace...',
               shortcut: const SingleActivator(LogicalKeyboardKey.keyF, meta: true, alt: true),
-              onSelected: onFindReplace,
+              onSelected: hasActiveTab ? onFindReplace : null,
             ),
           ],
         ),
@@ -226,33 +245,33 @@ class AppMenuBar extends ConsumerWidget {
           menus: [
             PlatformMenuItem(
               label: 'Viewer Only${viewMode == ViewMode.viewerOnly ? '  ✓' : ''}',
-              onSelected: () => viewModeNotifier.setMode(ViewMode.viewerOnly),
+              onSelected: hasActiveTab ? () => viewModeNotifier.setMode(ViewMode.viewerOnly) : null,
             ),
             PlatformMenuItem(
               label: 'Split View${viewMode == ViewMode.split ? '  ✓' : ''}',
               shortcut: const SingleActivator(LogicalKeyboardKey.keyE, meta: true),
-              onSelected: () => viewModeNotifier.setMode(ViewMode.split),
+              onSelected: hasActiveTab ? () => viewModeNotifier.setMode(ViewMode.split) : null,
             ),
             PlatformMenuItem(
               label: 'Editor Only${viewMode == ViewMode.editorOnly ? '  ✓' : ''}',
               shortcut: const SingleActivator(LogicalKeyboardKey.keyE, meta: true, shift: true),
-              onSelected: () => viewModeNotifier.setMode(ViewMode.editorOnly),
+              onSelected: hasActiveTab ? () => viewModeNotifier.setMode(ViewMode.editorOnly) : null,
             ),
             const PlatformMenuItemGroup(members: []),
             PlatformMenuItem(
               label: 'Zoom In',
               shortcut: const SingleActivator(LogicalKeyboardKey.equal, meta: true),
-              onSelected: onZoomIn,
+              onSelected: hasActiveTab ? onZoomIn : null,
             ),
             PlatformMenuItem(
               label: 'Zoom Out',
               shortcut: const SingleActivator(LogicalKeyboardKey.minus, meta: true),
-              onSelected: onZoomOut,
+              onSelected: hasActiveTab ? onZoomOut : null,
             ),
             PlatformMenuItem(
               label: 'Reset Zoom',
               shortcut: const SingleActivator(LogicalKeyboardKey.digit0, meta: true),
-              onSelected: onZoomReset,
+              onSelected: hasActiveTab ? onZoomReset : null,
             ),
             const PlatformMenuItemGroup(members: []),
             PlatformMenuItem(
@@ -308,6 +327,7 @@ class AppMenuBar extends ConsumerWidget {
     final viewModeNotifier = ref.read(viewModeProvider.notifier);
     final viewMode = ref.watch(viewModeProvider);
     final recentFiles = ref.watch(preferencesProvider).value?.general.recentFiles ?? [];
+    final hasActiveTab = ref.watch(tabManagerProvider).hasTabs;
 
     return Column(
       children: [
@@ -362,35 +382,39 @@ class AppMenuBar extends ConsumerWidget {
                   const Divider(height: 1),
                   MenuItemButton(
                     trailingIcon: _shortcutLabel('Ctrl+S'),
-                    onPressed: () => tabManager.saveActiveDocument(),
+                    onPressed: hasActiveTab ? () => tabManager.saveActiveDocument() : null,
                     child: const Text('Save'),
                   ),
                   MenuItemButton(
                     trailingIcon: _shortcutLabel('Ctrl+Shift+S'),
-                    onPressed: () => tabManager.saveActiveDocumentAs(),
+                    onPressed: hasActiveTab ? () => tabManager.saveActiveDocumentAs() : null,
                     child: const Text('Save As...'),
                   ),
                   MenuItemButton(
                     trailingIcon: _shortcutLabel('F2'),
-                    onPressed: onRename,
+                    onPressed: hasActiveTab ? onRename : null,
                     child: const Text('Rename...'),
                   ),
                   const Divider(height: 1),
                   MenuItemButton(
                     trailingIcon: _shortcutLabel('Ctrl+W'),
-                    onPressed: onCloseTab,
+                    onPressed: hasActiveTab ? onCloseTab : null,
                     child: const Text('Close Tab'),
                   ),
                   MenuItemButton(
                     trailingIcon: _shortcutLabel('Ctrl+Shift+W'),
-                    onPressed: onCloseAllTabs,
+                    onPressed: hasActiveTab ? onCloseAllTabs : null,
                     child: const Text('Close All Tabs'),
                   ),
                   const Divider(height: 1),
                   MenuItemButton(
                     trailingIcon: _shortcutLabel('Ctrl+P'),
-                    onPressed: onPrint,
-                    child: const Text('Print...'),
+                    onPressed: hasActiveTab ? onPrint : null,
+                    child: Text(Platform.isWindows ? 'View as PDF...' : 'Print...'),
+                  ),
+                  MenuItemButton(
+                    onPressed: hasActiveTab ? onExportPdf : null,
+                    child: const Text('Export to PDF...'),
                   ),
                   const Divider(height: 1),
                   MenuItemButton(
@@ -418,33 +442,33 @@ class AppMenuBar extends ConsumerWidget {
                   const Divider(height: 1),
                   MenuItemButton(
                     trailingIcon: _shortcutLabel('Ctrl+Z'),
-                    onPressed: null, // Handled by re_editor
+                    onPressed: onUndo,
                     child: const Text('Undo'),
                   ),
                   MenuItemButton(
                     trailingIcon: _shortcutLabel('Ctrl+Shift+Z'),
-                    onPressed: null,
+                    onPressed: onRedo,
                     child: const Text('Redo'),
                   ),
                   const Divider(height: 1),
                   MenuItemButton(
                     trailingIcon: _shortcutLabel('Ctrl+X'),
-                    onPressed: null,
+                    onPressed: onCut,
                     child: const Text('Cut'),
                   ),
                   MenuItemButton(
                     trailingIcon: _shortcutLabel('Ctrl+C'),
-                    onPressed: null,
+                    onPressed: onCopy,
                     child: const Text('Copy'),
                   ),
                   MenuItemButton(
                     trailingIcon: _shortcutLabel('Ctrl+V'),
-                    onPressed: null,
+                    onPressed: onPaste,
                     child: const Text('Paste'),
                   ),
                   MenuItemButton(
                     trailingIcon: _shortcutLabel('Ctrl+A'),
-                    onPressed: null,
+                    onPressed: onSelectAll,
                     child: const Text('Select All'),
                   ),
                   const Divider(height: 1),
@@ -461,12 +485,12 @@ class AppMenuBar extends ConsumerWidget {
                 menuChildren: [
                   MenuItemButton(
                     trailingIcon: _shortcutLabel('Ctrl+F'),
-                    onPressed: onFind,
+                    onPressed: hasActiveTab ? onFind : null,
                     child: const Text('Find...'),
                   ),
                   MenuItemButton(
                     trailingIcon: _shortcutLabel('Ctrl+H'),
-                    onPressed: onFindReplace,
+                    onPressed: hasActiveTab ? onFindReplace : null,
                     child: const Text('Find & Replace...'),
                   ),
                 ],
@@ -476,7 +500,7 @@ class AppMenuBar extends ConsumerWidget {
               SubmenuButton(
                 menuChildren: [
                   MenuItemButton(
-                    onPressed: () => viewModeNotifier.setMode(ViewMode.viewerOnly),
+                    onPressed: hasActiveTab ? () => viewModeNotifier.setMode(ViewMode.viewerOnly) : null,
                     leadingIcon: viewMode == ViewMode.viewerOnly
                         ? const Icon(Icons.check, size: 16)
                         : const SizedBox(width: 16),
@@ -484,7 +508,7 @@ class AppMenuBar extends ConsumerWidget {
                   ),
                   MenuItemButton(
                     trailingIcon: _shortcutLabel('Ctrl+E'),
-                    onPressed: () => viewModeNotifier.setMode(ViewMode.split),
+                    onPressed: hasActiveTab ? () => viewModeNotifier.setMode(ViewMode.split) : null,
                     leadingIcon: viewMode == ViewMode.split
                         ? const Icon(Icons.check, size: 16)
                         : const SizedBox(width: 16),
@@ -492,7 +516,7 @@ class AppMenuBar extends ConsumerWidget {
                   ),
                   MenuItemButton(
                     trailingIcon: _shortcutLabel('Ctrl+Shift+E'),
-                    onPressed: () => viewModeNotifier.setMode(ViewMode.editorOnly),
+                    onPressed: hasActiveTab ? () => viewModeNotifier.setMode(ViewMode.editorOnly) : null,
                     leadingIcon: viewMode == ViewMode.editorOnly
                         ? const Icon(Icons.check, size: 16)
                         : const SizedBox(width: 16),
@@ -501,17 +525,17 @@ class AppMenuBar extends ConsumerWidget {
                   const Divider(height: 1),
                   MenuItemButton(
                     trailingIcon: _shortcutLabel('Ctrl+='),
-                    onPressed: onZoomIn,
+                    onPressed: hasActiveTab ? onZoomIn : null,
                     child: const Text('Zoom In'),
                   ),
                   MenuItemButton(
                     trailingIcon: _shortcutLabel('Ctrl+-'),
-                    onPressed: onZoomOut,
+                    onPressed: hasActiveTab ? onZoomOut : null,
                     child: const Text('Zoom Out'),
                   ),
                   MenuItemButton(
                     trailingIcon: _shortcutLabel('Ctrl+0'),
-                    onPressed: onZoomReset,
+                    onPressed: hasActiveTab ? onZoomReset : null,
                     child: const Text('Reset Zoom'),
                   ),
                   const Divider(height: 1),
