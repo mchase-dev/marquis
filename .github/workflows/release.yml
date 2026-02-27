@@ -1,0 +1,189 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      - run: flutter build windows --release
+
+      - name: Archive Windows build
+        run: Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath Marquis-windows.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-app
+          path: Marquis-windows.zip
+
+      - name: Install Inno Setup
+        run: choco install innosetup --yes
+
+      - name: Build Windows installer
+        run: |
+          $version = "${{ github.ref_name }}".TrimStart("v")
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DAppVersion=$version installers\windows\marquis.iss
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: build/installer/Marquis-windows-setup.exe
+
+  build-macos:
+    name: Build macOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      - run: flutter build macos --release
+
+      - name: Archive macOS build
+        run: |
+          cd build/macos/Build/Products/Release
+          tar -czf Marquis-macos.tar.gz Marquis.app
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-app
+          path: build/macos/Build/Products/Release/Marquis-macos.tar.gz
+
+      - name: Install create-dmg
+        run: brew install create-dmg
+
+      - name: Build macOS DMG
+        run: |
+          create-dmg \
+            --volname "Marquis" \
+            --window-pos 200 120 \
+            --window-size 600 400 \
+            --icon-size 100 \
+            --skip-jenkins \
+            "Marquis-macos.dmg" \
+            "build/macos/Build/Products/Release/Marquis.app"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-installer
+          path: Marquis-macos.dmg
+
+  build-linux:
+    name: Build Linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libgtk-3-dev libblkid-dev liblzma-dev
+
+      - run: flutter pub get
+
+      - run: flutter build linux --release
+
+      - name: Archive Linux build
+        run: |
+          cd build/linux/x64/release/bundle
+          tar -czf Marquis-linux.tar.gz *
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-app
+          path: build/linux/x64/release/bundle/Marquis-linux.tar.gz
+
+      - name: Install imagemagick
+        run: sudo apt-get install -y imagemagick
+
+      - name: Build .deb package
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          PKG="marquis_${VERSION}_amd64"
+
+          mkdir -p "${PKG}/DEBIAN"
+          cat > "${PKG}/DEBIAN/control" <<EOF
+          Package: marquis
+          Version: ${VERSION}
+          Section: editors
+          Priority: optional
+          Architecture: amd64
+          Depends: libgtk-3-0, libblkid1, liblzma5
+          Maintainer: Marquis <marquis@users.noreply.github.com>
+          Description: Marquis de Editeur
+           Marquis de Editeur, the Noble Markdown Editor
+          EOF
+
+          mkdir -p "${PKG}/opt/marquis"
+          cp -r build/linux/x64/release/bundle/* "${PKG}/opt/marquis/"
+
+          mkdir -p "${PKG}/usr/bin"
+          printf '#!/bin/bash\nexec /opt/marquis/marquis "$@"\n' > "${PKG}/usr/bin/marquis"
+          chmod 755 "${PKG}/usr/bin/marquis"
+
+          mkdir -p "${PKG}/usr/share/applications"
+          cp installers/linux/marquis.desktop "${PKG}/usr/share/applications/"
+
+          mkdir -p "${PKG}/usr/share/icons/hicolor/256x256/apps"
+          convert assets/icons/app_icon_master.png -resize 256x256 "${PKG}/usr/share/icons/hicolor/256x256/apps/marquis.png"
+
+          dpkg-deb --build "${PKG}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-installer
+          path: marquis_*_amd64.deb
+
+  create-release:
+    name: Create Release
+    needs: [build-windows, build-macos, build-linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Rename artifacts
+        run: |
+          mv artifacts/macos-app/Marquis-macos.tar.gz artifacts/
+          mv artifacts/windows-app/Marquis-windows.zip artifacts/
+          mv artifacts/linux-app/Marquis-linux.tar.gz artifacts/
+          mv artifacts/windows-installer/Marquis-windows-setup.exe artifacts/
+          mv artifacts/linux-installer/marquis_*_amd64.deb artifacts/
+          mv artifacts/macos-installer/Marquis-macos.dmg artifacts/
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/Marquis-macos.tar.gz
+            artifacts/Marquis-macos.dmg
+            artifacts/Marquis-windows.zip
+            artifacts/Marquis-windows-setup.exe
+            artifacts/Marquis-linux.tar.gz
+            artifacts/marquis_*_amd64.deb
+          generate_release_notes: true
