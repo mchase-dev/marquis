@@ -50,6 +50,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   riverpod_generator: ^3.0.3
   build_runner: any
+  image: ^4.5.3
 
 flutter:
   uses-material-design: true

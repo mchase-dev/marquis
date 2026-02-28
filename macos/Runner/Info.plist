@@ -38,6 +38,8 @@
 				<string>md</string>
 				<string>markdown</string>
 			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>MarkdownDocument</string>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>LSHandlerRank</key>

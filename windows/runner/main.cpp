@@ -29,7 +29,7 @@ static std::wstring FilePathToUri(const std::wstring& path) {
 
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                       _In_ wchar_t *command_line, _In_ int show_command) {
-  // --- Single-instance enforcement [DD §19 — Windows] ---
+  // --- Single-instance enforcement ---
   HANDLE mutex = ::CreateMutexW(nullptr, FALSE,
                                 L"com.marquis.editor.instance");
   if (mutex != nullptr && ::GetLastError() == ERROR_ALREADY_EXISTS) {

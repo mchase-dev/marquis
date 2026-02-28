@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Marquis
+Comment=A noble Markdown editor
+Exec=/opt/marquis/marquis %f
+Icon=marquis
+MimeType=text/markdown;
+Categories=Utility;TextEditor;
+StartupNotify=true
+Terminal=false
