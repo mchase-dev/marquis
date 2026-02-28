@@ -1,4 +1,4 @@
-/// Save status for status bar display [DD §5 — Status Bar]
+/// Save status for status bar display
 enum SaveStatus {
   saved('Saved'),
   saving('Saving...'),

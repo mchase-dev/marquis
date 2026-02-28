@@ -7,7 +7,7 @@ import 'package:marquis/core/constants.dart';
 import 'package:marquis/providers/preferences_provider.dart';
 import 'package:marquis/providers/tab_manager_provider.dart';
 
-/// Welcome screen shown when no tabs are open [DD §6 — Empty State]
+/// Welcome screen shown when no tabs are open
 class WelcomeScreen extends ConsumerWidget {
   const WelcomeScreen({super.key});
 

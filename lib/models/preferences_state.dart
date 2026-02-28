@@ -1,6 +1,6 @@
 import 'package:marquis/core/constants.dart';
 
-/// User preferences state [DD §17, Appendix B]
+/// User preferences state
 class PreferencesState {
   final AppearancePrefs appearance;
   final EditorPrefs editor;
@@ -61,10 +61,10 @@ class PreferencesState {
   }
 }
 
-/// Theme mode setting [DD §17 — Appearance]
+/// Theme mode setting
 enum ThemeModePref { light, dark, system }
 
-/// Appearance preferences [DD §17 — Appearance section]
+/// Appearance preferences
 class AppearancePrefs {
   final ThemeModePref theme;
   final String accentColor;
@@ -126,7 +126,7 @@ class AppearancePrefs {
   }
 }
 
-/// Editor preferences [DD §17 — Editor section]
+/// Editor preferences
 class EditorPrefs {
   final bool wordWrap;
   final bool showLineNumbers;
@@ -177,7 +177,7 @@ class EditorPrefs {
   }
 }
 
-/// Autosave preferences [DD §17 — Auto-Save section]
+/// Autosave preferences
 class AutosavePrefs {
   final bool enabled;
   final int delaySec;
@@ -210,7 +210,7 @@ class AutosavePrefs {
   }
 }
 
-/// General preferences [DD §17 — General section]
+/// General preferences
 class GeneralPrefs {
   final List<String> recentFiles;
   final int maxRecentFiles;
@@ -246,7 +246,7 @@ class GeneralPrefs {
   }
 }
 
-/// Window state preferences [DD §17 — Window section]
+/// Window state preferences
 class WindowPrefs {
   final int width;
   final int height;

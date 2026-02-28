@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Find bar for the viewer pane — search only, no replace [DD §16]
+/// Find bar for the viewer pane — search only, no replace
 ///
 /// Searches raw markdown text and scrolls to approximate match positions
 /// using proportional scrolling.

@@ -10,7 +10,7 @@ import 'package:marquis/providers/preferences_provider.dart';
 import 'package:marquis/theme/editor_theme.dart';
 import 'package:marquis/widgets/editor/find_replace_bar.dart';
 
-/// Markdown source editor using re_editor [DD §8]
+/// Markdown source editor using re_editor
 class EditorPane extends ConsumerStatefulWidget {
   final String content;
   final String tabId;
@@ -94,7 +94,7 @@ class EditorPaneState extends ConsumerState<EditorPane> {
     });
   }
 
-  /// Open find bar (Ctrl+F) [DD §16]
+  /// Open find bar (Ctrl+F)
   void showFind() {
     setState(() {
       _showFindBar = true;
@@ -106,7 +106,7 @@ class EditorPaneState extends ConsumerState<EditorPane> {
     });
   }
 
-  /// Open find & replace bar (Ctrl+H) [DD §16]
+  /// Open find & replace bar (Ctrl+H)
   void showFindReplace() {
     setState(() {
       _showFindBar = true;

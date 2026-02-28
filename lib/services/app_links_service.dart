@@ -7,7 +7,7 @@ import 'package:window_manager/window_manager.dart';
 
 import 'package:marquis/providers/tab_manager_provider.dart';
 
-/// Handles single-instance file opening via app_links [DD §19]
+/// Handles single-instance file opening via app_links
 ///
 /// Supports both cold start (command-line args) and warm start
 /// (another instance sends a file path via WM_COPYDATA / D-Bus / macOS open).

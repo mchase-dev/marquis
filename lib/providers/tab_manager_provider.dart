@@ -25,7 +25,7 @@ typedef FileWarningCallback = Future<bool> Function(
 /// Callback for non-blocking info notifications (encoding fallback)
 typedef FileInfoCallback = void Function(String message);
 
-/// Manages all open tabs and their documents [DD §6, §7]
+/// Manages all open tabs and their documents
 @Riverpod(keepAlive: true)
 class TabManager extends _$TabManager {
   /// Document states keyed by tab ID
@@ -33,7 +33,7 @@ class TabManager extends _$TabManager {
 
   final FileService _fileService = FileService();
 
-  /// Callbacks set by AppShell for error/warning UI [DD §24]
+  /// Callbacks set by AppShell for error/warning UI
   FileErrorCallback? onError;
   FileWarningCallback? onWarning;
   FileInfoCallback? onInfo;
@@ -46,7 +46,7 @@ class TabManager extends _$TabManager {
   /// Access a document by tab ID
   DocumentState? getDocument(String tabId) => _documents[tabId];
 
-  /// Create a new untitled tab [DD §7 — Lifecycle step 1]
+  /// Create a new untitled tab
   void newFile() {
     final id = _uuid.v4();
 
@@ -64,7 +64,7 @@ class TabManager extends _$TabManager {
     );
   }
 
-  /// Open a file from disk [DD §7 — Lifecycle step 2, §23, §24]
+  /// Open a file from disk
   Future<void> openFile(String path) async {
     // Check if already open — switch to existing tab
     for (int i = 0; i < state.tabIds.length; i++) {
@@ -86,7 +86,7 @@ class TabManager extends _$TabManager {
       return;
     }
 
-    // Large file warning [DD §24]
+    // Large file warning
     if (result.isLargeFile) {
       final proceed = await onWarning?.call(
         'Large file',
@@ -113,7 +113,7 @@ class TabManager extends _$TabManager {
       activeTabIndex: tabIds.length - 1,
     );
 
-    // Encoding fallback notification [DD §24]
+    // Encoding fallback notification
     if (result.encoding != 'utf-8') {
       onInfo?.call(
         'File opened with ${result.encoding} encoding (not valid UTF-8).',
@@ -123,11 +123,11 @@ class TabManager extends _$TabManager {
     // Track in recent files [DD Appendix C]
     ref.read(preferencesProvider.notifier).addRecentFile(path);
 
-    // Start watching for external changes [DD §15]
+    // Start watching for external changes
     ref.read(fileWatcherProvider.notifier).watchFile(id, path);
   }
 
-  /// Open file via file picker dialog [DD §23 — Opening a File]
+  /// Open file via file picker dialog
   Future<void> openFileDialog() async {
     final paths = await _fileService.pickFilesToOpen();
     if (paths == null || paths.isEmpty) return;
@@ -137,7 +137,7 @@ class TabManager extends _$TabManager {
     }
   }
 
-  /// Save the active document [DD §7 — Lifecycle step 4, §24]
+  /// Save the active document
   Future<void> saveActiveDocument() async {
     final activeId = state.activeTabId;
     if (activeId == null) return;
@@ -151,7 +151,7 @@ class TabManager extends _$TabManager {
       return;
     }
 
-    // Cancel autosave timer and suppress watcher [DD §14, §15]
+    // Cancel autosave timer and suppress watcher
     final autosave = ref.read(autosaveProvider.notifier);
     autosave.cancelTimer(activeId);
 
@@ -179,7 +179,7 @@ class TabManager extends _$TabManager {
     state = state.copyWith(revision: state.revision + 1);
   }
 
-  /// Save As dialog for active document [DD §24]
+  /// Save As dialog for active document
   Future<void> saveActiveDocumentAs() async {
     final activeId = state.activeTabId;
     if (activeId == null) return;
@@ -212,7 +212,7 @@ class TabManager extends _$TabManager {
     state = state.copyWith(revision: state.revision + 1);
   }
 
-  /// Save a specific document by tab ID [DD §24]
+  /// Save a specific document by tab ID
   Future<bool> saveDocument(String tabId) async {
     final doc = _documents[tabId];
     if (doc == null) return false;
@@ -265,7 +265,7 @@ class TabManager extends _$TabManager {
     return true;
   }
 
-  /// Update content of a document (called from editor) [DD §23 — Editing]
+  /// Update content of a document (called from editor)
   void updateContent(String tabId, String content) {
     final doc = _documents[tabId];
     if (doc == null) return;
@@ -274,7 +274,7 @@ class TabManager extends _$TabManager {
     // Bump revision to ensure Riverpod detects the change
     state = state.copyWith(revision: state.revision + 1);
 
-    // Trigger autosave [DD §14]
+    // Trigger autosave
     ref.read(autosaveProvider.notifier).onContentChanged(tabId);
   }
 
@@ -287,20 +287,20 @@ class TabManager extends _$TabManager {
     state = state.copyWith(revision: state.revision + 1);
   }
 
-  /// Switch to a tab by index [DD §6 — Switch tab]
+  /// Switch to a tab by index
   void setActiveTab(int index) {
     if (index < 0 || index >= state.tabIds.length) return;
     state = state.copyWith(activeTabIndex: index);
   }
 
-  /// Close a tab by ID [DD §7 — Lifecycle step 6]
+  /// Close a tab by ID
   /// Returns true if the tab was closed, false if cancelled
   void closeTab(String tabId) {
     final index = state.tabIds.indexOf(tabId);
     if (index == -1) return;
 
     final doc = _documents[tabId];
-    // Unwatch and cancel autosave timer [DD §14, §15]
+    // Unwatch and cancel autosave timer
     ref.read(autosaveProvider.notifier).cancelTimer(tabId);
     if (doc?.filePath != null) {
       ref.read(fileWatcherProvider.notifier).unwatchFile(doc!.filePath!);
@@ -323,7 +323,7 @@ class TabManager extends _$TabManager {
     );
   }
 
-  /// Close all other tabs [DD §6 — Close Others]
+  /// Close all other tabs
   void closeOtherTabs(String keepTabId) {
     final keepIndex = state.tabIds.indexOf(keepTabId);
     if (keepIndex == -1) return;
@@ -345,7 +345,7 @@ class TabManager extends _$TabManager {
     );
   }
 
-  /// Close all tabs [DD §6 — Close All]
+  /// Close all tabs
   void closeAllTabs() {
     // Unwatch all files and cancel all timers
     for (final id in state.tabIds) {
@@ -359,7 +359,7 @@ class TabManager extends _$TabManager {
     state = const TabManagerState();
   }
 
-  /// Close tabs to the right [DD §6 — Close to Right]
+  /// Close tabs to the right
   void closeTabsToRight(String tabId) {
     final index = state.tabIds.indexOf(tabId);
     if (index == -1) return;
@@ -381,7 +381,7 @@ class TabManager extends _$TabManager {
     );
   }
 
-  /// Reorder tabs via drag-and-drop [DD §6 — Reorder tabs]
+  /// Reorder tabs via drag-and-drop
   void reorderTabs(int oldIndex, int newIndex) {
     if (oldIndex == newIndex) return;
     final tabIds = [...state.tabIds];
@@ -409,7 +409,7 @@ class TabManager extends _$TabManager {
   /// Check if any documents have unsaved changes
   bool get hasUnsavedChanges => _documents.values.any((d) => d.isDirty);
 
-  /// Rename a file on disk and update the tab [DD §12 — Rename File Behavior]
+  /// Rename a file on disk and update the tab
   void updateFilePath(String tabId, String newPath) {
     final doc = _documents[tabId];
     if (doc == null) return;
@@ -419,7 +419,7 @@ class TabManager extends _$TabManager {
     state = state.copyWith(revision: state.revision + 1);
   }
 
-  /// Mark a document as saved (called after autosave) [DD §14]
+  /// Mark a document as saved (called after autosave)
   void markSaved(String tabId) {
     final doc = _documents[tabId];
     if (doc == null) return;
@@ -431,7 +431,7 @@ class TabManager extends _$TabManager {
     state = state.copyWith(revision: state.revision + 1);
   }
 
-  /// Reload a document from disk after external change [DD §15]
+  /// Reload a document from disk after external change
   void reloadFromDisk(String tabId,
       {required String content, required DateTime lastModified}) {
     final doc = _documents[tabId];
@@ -445,7 +445,7 @@ class TabManager extends _$TabManager {
     state = state.copyWith(revision: state.revision + 1);
   }
 
-  /// Set externally modified flag [DD §15]
+  /// Set externally modified flag
   void setExternallyModified(String tabId, bool value) {
     final doc = _documents[tabId];
     if (doc == null) return;
@@ -454,7 +454,7 @@ class TabManager extends _$TabManager {
     state = state.copyWith(revision: state.revision + 1);
   }
 
-  /// Reverse lookup: find tab ID by file path [DD §15]
+  /// Reverse lookup: find tab ID by file path
   String? getTabIdForPath(String path) {
     for (final entry in _documents.entries) {
       if (entry.value.filePath == path) return entry.key;
@@ -462,7 +462,7 @@ class TabManager extends _$TabManager {
     return null;
   }
 
-  /// Open a bundled help file as a special read-only tab [DD §12 — Help Content]
+  /// Open a bundled help file as a special read-only tab
   Future<void> openHelpFile(String title, String assetPath) async {
     // Check if already open — switch to existing tab
     for (int i = 0; i < state.tabIds.length; i++) {

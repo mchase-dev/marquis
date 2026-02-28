@@ -8,7 +8,7 @@ import 'package:marquis/providers/preferences_provider.dart';
 import 'package:marquis/providers/tab_manager_provider.dart';
 import 'package:marquis/providers/view_mode_provider.dart';
 
-/// Platform-adaptive menu bar [DD §12]
+/// Platform-adaptive menu bar
 ///
 /// macOS: PlatformMenuBar (native system menu)
 /// Windows/Linux: MenuBar widget (in-app)
@@ -74,7 +74,7 @@ class AppMenuBar extends ConsumerWidget {
     return _buildDesktopMenu(context, ref);
   }
 
-  /// macOS: native system menu bar [DD §12 — macOS Considerations]
+  /// macOS: native system menu bar
   Widget _buildMacOSMenu(BuildContext context, WidgetRef ref) {
     final tabManager = ref.read(tabManagerProvider.notifier);
     final viewModeNotifier = ref.read(viewModeProvider.notifier);
@@ -316,7 +316,7 @@ class AppMenuBar extends ConsumerWidget {
     );
   }
 
-  /// Windows/Linux: in-app MenuBar widget [DD §12]
+  /// Windows/Linux: in-app MenuBar widget
   ///
   /// Shortcut labels are display-only (trailingIcon) — actual shortcut
   /// handling is done by CallbackShortcuts in AppShell to avoid conflicts

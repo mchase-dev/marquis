@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:marquis/models/command_item.dart';
 import 'package:marquis/widgets/command_palette/command_data.dart';
 
-/// Modal command palette overlay [DD §11 — UI]
+/// Modal command palette overlay
 class CommandPalette extends StatefulWidget {
   final List<CommandItem> commands;
   final ValueChanged<CommandItem> onSelect;
@@ -86,7 +86,7 @@ class _CommandPaletteState extends State<CommandPalette> {
           onTap: widget.onClose,
           child: Container(color: Colors.black26),
         ),
-        // Palette positioned near top center [DD §11 — UI]
+        // Palette positioned near top center
         Positioned(
           top: 60,
           left: 0,
@@ -172,7 +172,7 @@ class _CommandPaletteState extends State<CommandPalette> {
   }
 }
 
-/// Individual command item in the palette list [DD §11 — UI: icon, name, description, shortcut]
+/// Individual command item in the palette list
 class _CommandListItem extends StatelessWidget {
   final CommandItem item;
   final bool isSelected;

@@ -8,15 +8,15 @@ part of 'view_mode_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Tracks the current view mode [DD §10 — Toggling Edit Mode]
+/// Tracks the current view mode
 
 @ProviderFor(ViewModeNotifier)
 const viewModeProvider = ViewModeNotifierProvider._();
 
-/// Tracks the current view mode [DD §10 — Toggling Edit Mode]
+/// Tracks the current view mode
 final class ViewModeNotifierProvider
     extends $NotifierProvider<ViewModeNotifier, ViewMode> {
-  /// Tracks the current view mode [DD §10 — Toggling Edit Mode]
+  /// Tracks the current view mode
   const ViewModeNotifierProvider._()
     : super(
         from: null,
@@ -46,7 +46,7 @@ final class ViewModeNotifierProvider
 
 String _$viewModeNotifierHash() => r'dbc98a2c4bf9881985c5cd7cf491673195d2fbe9';
 
-/// Tracks the current view mode [DD §10 — Toggling Edit Mode]
+/// Tracks the current view mode
 
 abstract class _$ViewModeNotifier extends $Notifier<ViewMode> {
   ViewMode build();

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 /// Manages debounced per-document autosave timers and write-suppression
-/// for file watcher integration [DD §14]
+/// for file watcher integration
 class AutosaveService {
   /// Per-tab debounce timers
   final Map<String, Timer> _timers = {};

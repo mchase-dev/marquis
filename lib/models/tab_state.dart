@@ -1,4 +1,4 @@
-/// Manages the collection of open tabs [DD §6]
+/// Manages the collection of open tabs
 class TabManagerState {
   final List<String> tabIds;
   final int activeTabIndex;

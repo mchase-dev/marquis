@@ -8,16 +8,16 @@ import 'package:marquis/services/file_service.dart';
 
 part 'autosave_provider.g.dart';
 
-/// Callback for autosave failures that should be surfaced to the user [DD §24]
+/// Callback for autosave failures that should be surfaced to the user
 typedef SaveErrorCallback = void Function(String fileName, String message);
 
-/// Manages autosave lifecycle — debounced saves on content change [DD §14]
+/// Manages autosave lifecycle — debounced saves on content change
 @Riverpod(keepAlive: true)
 class Autosave extends _$Autosave {
   final AutosaveService _service = AutosaveService();
   final FileService _fileService = FileService();
 
-  /// Callback set by AppShell to show save-failure snackbar [DD §24]
+  /// Callback set by AppShell to show save-failure snackbar
   SaveErrorCallback? onSaveError;
 
   @override
@@ -48,7 +48,7 @@ class Autosave extends _$Autosave {
     );
   }
 
-  /// Actually perform the save [DD §24 — disk full keeps content in memory]
+  /// Actually perform the save
   Future<void> _performSave(String tabId) async {
     final doc = ref.read(tabManagerProvider.notifier).getDocument(tabId);
     if (doc == null || doc.filePath == null || !doc.isDirty) return;

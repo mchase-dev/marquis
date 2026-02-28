@@ -2,10 +2,10 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'view_mode_provider.g.dart';
 
-/// Layout modes for the content area [DD §10]
+/// Layout modes for the content area
 enum ViewMode { viewerOnly, split, editorOnly }
 
-/// Tracks the current view mode [DD §10 — Toggling Edit Mode]
+/// Tracks the current view mode
 @Riverpod(keepAlive: true)
 class ViewModeNotifier extends _$ViewModeNotifier {
   @override

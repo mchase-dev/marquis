@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Editor-specific color definitions for light and dark modes [DD §20 — Editor Theming]
+/// Editor-specific color definitions for light and dark modes
 class EditorTheme {
   EditorTheme._();
 

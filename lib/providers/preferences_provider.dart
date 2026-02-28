@@ -5,7 +5,7 @@ import 'package:marquis/services/preferences_service.dart';
 
 part 'preferences_provider.g.dart';
 
-/// Provides reactive access to user preferences [DD §4, §17]
+/// Provides reactive access to user preferences
 @Riverpod(keepAlive: true)
 class Preferences extends _$Preferences {
   late final PreferencesService _service;

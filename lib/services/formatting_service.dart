@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:re_editor/re_editor.dart';
 
-/// Markdown formatting operations for the editor [DD §8 — Markdown Formatting Shortcuts]
+/// Markdown formatting operations for the editor
 class FormattingService {
   FormattingService._();
 
-  /// Wrap selected text or insert markers at cursor [DD §8 — Selection wrapping]
+  /// Wrap selected text or insert markers at cursor
   static void wrapSelection(
     CodeLineEditingController controller,
     String before,
@@ -24,7 +24,7 @@ class FormattingService {
     });
   }
 
-  /// Insert prefix at the beginning of the current line [DD §8 — Line-start insertion]
+  /// Insert prefix at the beginning of the current line
   static void insertLinePrefix(
     CodeLineEditingController controller,
     String prefix,
@@ -56,7 +56,7 @@ class FormattingService {
     });
   }
 
-  // --- Specific formatting actions [DD §8 — Shortcuts table] ---
+  // --- Specific formatting actions ---
 
   static void bold(CodeLineEditingController c) =>
       wrapSelection(c, '**', '**');

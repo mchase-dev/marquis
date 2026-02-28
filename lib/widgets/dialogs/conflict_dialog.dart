@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Result of the external-change conflict dialog [DD §15 — Case 2]
+/// Result of the external-change conflict dialog
 enum ConflictDialogResult { reload, keepLocal }
 
 /// Shown when a file has been modified externally while it has local changes

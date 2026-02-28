@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:re_editor/re_editor.dart';
 
-/// Find & Replace bar for the editor [DD §16]
+/// Find & Replace bar for the editor
 class FindReplaceBar extends StatefulWidget {
   final CodeFindController findController;
   final bool showReplace;

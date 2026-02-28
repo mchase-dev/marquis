@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-/// Represents a command in the command palette [DD §11]
+/// Represents a command in the command palette
 class CommandItem {
   final String name;
   final String? description;
@@ -27,7 +27,7 @@ class CommandItem {
   bool get isAppCommand => action != null;
 }
 
-/// Categories for grouping commands in the palette [DD §11]
+/// Categories for grouping commands in the palette
 enum CommandCategory {
   snippet,
   file,

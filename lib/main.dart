@@ -6,7 +6,7 @@ import 'package:marquis/app.dart';
 import 'package:marquis/core/constants.dart';
 import 'package:marquis/services/preferences_service.dart';
 
-/// Command-line arguments passed at launch, used for cold-start file open [DD §19]
+/// Command-line arguments passed at launch, used for cold-start file open
 List<String> initialArgs = const [];
 
 void main(List<String> args) async {
@@ -30,7 +30,7 @@ void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
 
-  // Load saved window state from preferences [DD §5 — Window state persistence]
+  // Load saved window state from preferences
   final prefsService = PreferencesService();
   final prefs = await prefsService.load();
   final windowPrefs = prefs.window;
@@ -50,12 +50,12 @@ void main(List<String> args) async {
   );
 
   windowManager.waitUntilReadyToShow(windowOptions, () async {
-    // Restore position if saved [DD §17 — Window settings]
+    // Restore position if saved
     if (windowPrefs.x != null && windowPrefs.y != null) {
       await windowManager.setPosition(
         Offset(windowPrefs.x!.toDouble(), windowPrefs.y!.toDouble()),
       );
-      // Validate position is on-screen [DD §5 — off-screen fallback]
+      // Validate position is on-screen
       final position = await windowManager.getPosition();
       if (position.dx < -100 || position.dy < -100) {
         await windowManager.center();

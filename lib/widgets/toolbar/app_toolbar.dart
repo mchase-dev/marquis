@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:marquis/providers/view_mode_provider.dart';
 
-/// Slim toolbar at the top of the app [DD §5 — Toolbar]
+/// Slim toolbar at the top of the app
 class AppToolbar extends ConsumerWidget {
   const AppToolbar({super.key});
 
@@ -26,7 +26,7 @@ class AppToolbar extends ConsumerWidget {
       child: Row(
         children: [
           const Spacer(),
-          // View mode selector [DD §10 — Layout Modes]
+          // View mode selector
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: SegmentedButton<ViewMode>(

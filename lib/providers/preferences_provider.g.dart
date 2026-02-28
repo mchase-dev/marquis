@@ -8,15 +8,15 @@ part of 'preferences_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Provides reactive access to user preferences [DD §4, §17]
+/// Provides reactive access to user preferences
 
 @ProviderFor(Preferences)
 const preferencesProvider = PreferencesProvider._();
 
-/// Provides reactive access to user preferences [DD §4, §17]
+/// Provides reactive access to user preferences
 final class PreferencesProvider
     extends $AsyncNotifierProvider<Preferences, PreferencesState> {
-  /// Provides reactive access to user preferences [DD §4, §17]
+  /// Provides reactive access to user preferences
   const PreferencesProvider._()
     : super(
         from: null,
@@ -38,7 +38,7 @@ final class PreferencesProvider
 
 String _$preferencesHash() => r'0846e27c894867826d3b2e8f82c61dba85d53d1a';
 
-/// Provides reactive access to user preferences [DD §4, §17]
+/// Provides reactive access to user preferences
 
 abstract class _$Preferences extends $AsyncNotifier<PreferencesState> {
   FutureOr<PreferencesState> build();

@@ -1,7 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-/// Individual tab widget [DD §6 — Tab States]
+/// Individual tab widget
 class TabItem extends StatelessWidget {
   final String tabId;
   final String displayName;
@@ -28,7 +28,7 @@ class TabItem extends StatelessWidget {
     final accentColor = theme.colorScheme.primary;
 
     return Listener(
-      // Middle-click to close [DD §6 — Close tab]
+      // Middle-click to close
       onPointerDown: (event) {
         if (event.buttons == kMiddleMouseButton) {
           onClose();
@@ -60,7 +60,7 @@ class TabItem extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Dirty dot or conflict icon [DD §6 — Clean/Dirty/Conflict]
+              // Dirty dot or conflict icon
               if (isConflict)
                 Padding(
                   padding: const EdgeInsets.only(right: 6),

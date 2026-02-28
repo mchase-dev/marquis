@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Context menu items for right-clicking a tab [DD §6 — Tab Interactions]
+/// Context menu items for right-clicking a tab
 class TabContextMenu {
   TabContextMenu._();
 

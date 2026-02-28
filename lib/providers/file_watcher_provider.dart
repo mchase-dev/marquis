@@ -11,10 +11,10 @@ part 'file_watcher_provider.g.dart';
 /// Callback type for conflict/deletion events that require UI interaction
 typedef FileEventCallback = void Function(String tabId, {required bool isDeleted});
 
-/// Callback type for silent reload notifications [DD §15 — Case 1]
+/// Callback type for silent reload notifications
 typedef FileReloadCallback = void Function(String fileName);
 
-/// Manages file watchers for open documents [DD §15]
+/// Manages file watchers for open documents
 @Riverpod(keepAlive: true)
 class FileWatcherNotifier extends _$FileWatcherNotifier {
   final FileWatcherService _service = FileWatcherService();
@@ -55,7 +55,7 @@ class FileWatcherNotifier extends _$FileWatcherNotifier {
     if (doc == null) return;
 
     if (!doc.isDirty) {
-      // No local changes — silently reload + notify [DD §15 — Case 1]
+      // No local changes — silently reload + notify
       _reloadFromDisk(tabId, path).then((_) {
         onFileReloaded?.call(doc.displayName);
       });

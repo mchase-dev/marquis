@@ -13,7 +13,7 @@ import 'package:marquis/providers/show_viewer_images_provider.dart';
 import 'package:marquis/theme/viewer_theme.dart';
 import 'package:marquis/widgets/viewer/viewer_find_bar.dart';
 
-/// Error boundary widget that catches rendering errors and shows fallback [DD §24]
+/// Error boundary widget that catches rendering errors and shows fallback
 class _MarkdownErrorBoundary extends StatefulWidget {
   final Widget child;
   final String rawContent;
@@ -118,7 +118,7 @@ class _ErrorCatcherState extends State<_ErrorCatcher> {
   }
 }
 
-/// Rendered Markdown viewer [DD §9]
+/// Rendered Markdown viewer
 class ViewerPane extends ConsumerStatefulWidget {
   final String content;
   final String? filePath;
@@ -139,7 +139,7 @@ class ViewerPaneState extends ConsumerState<ViewerPane> {
   bool _showFindBar = false;
   Map<String, GlobalKey> _anchorKeys = {};
 
-  /// Open viewer find bar (Ctrl+F in viewer context) [DD §16]
+  /// Open viewer find bar (Ctrl+F in viewer context)
   void showFind() {
     setState(() => _showFindBar = true);
   }
@@ -242,7 +242,7 @@ class ViewerPaneState extends ConsumerState<ViewerPane> {
 
   /// Build markdown widgets manually so we can attach GlobalKeys to headings.
   Widget _buildMarkdownColumn(String content, MarkdownConfig config, {required bool showImages}) {
-    // Strip HTML comments before rendering [DD §9]
+    // Strip HTML comments before rendering
     content = content.replaceAll(_htmlCommentRe, '');
 
     List<Toc> tocEntries = [];

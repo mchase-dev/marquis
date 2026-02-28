@@ -6,12 +6,12 @@ import 'package:file_picker/file_picker.dart';
 import 'package:marquis/core/constants.dart';
 import 'package:marquis/core/file_errors.dart';
 
-/// Size threshold for large-file warning (10 MB) [DD §24]
+/// Size threshold for large-file warning (10 MB)
 const _largeFileThreshold = 10 * 1024 * 1024;
 
-/// File I/O operations [DD §7, §23, §24]
+/// File I/O operations
 class FileService {
-  /// Show a native file open dialog and return the selected path(s) [DD §23]
+  /// Show a native file open dialog and return the selected path(s)
   Future<List<String>?> pickFilesToOpen() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -34,7 +34,7 @@ class FileService {
     );
   }
 
-  /// Read a file from disk [DD §7 — Document Lifecycle step 2, DD §24]
+  /// Read a file from disk
   ///
   /// Returns content, lastModified, whether file is large (>10MB), and
   /// whether a fallback encoding was used.
@@ -92,7 +92,7 @@ class FileService {
     );
   }
 
-  /// Write content to a file [DD §7 — Document Lifecycle step 4, DD §24]
+  /// Write content to a file
   Future<void> writeFile(String path, String content) async {
     final file = File(path);
     try {

@@ -8,15 +8,15 @@ part of 'autosave_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Manages autosave lifecycle — debounced saves on content change [DD §14]
+/// Manages autosave lifecycle — debounced saves on content change
 
 @ProviderFor(Autosave)
 const autosaveProvider = AutosaveProvider._();
 
-/// Manages autosave lifecycle — debounced saves on content change [DD §14]
+/// Manages autosave lifecycle — debounced saves on content change
 final class AutosaveProvider
     extends $NotifierProvider<Autosave, AutosaveService> {
-  /// Manages autosave lifecycle — debounced saves on content change [DD §14]
+  /// Manages autosave lifecycle — debounced saves on content change
   const AutosaveProvider._()
     : super(
         from: null,
@@ -46,7 +46,7 @@ final class AutosaveProvider
 
 String _$autosaveHash() => r'451582b9b22e15195dcd465ebf469e617b4b974b';
 
-/// Manages autosave lifecycle — debounced saves on content change [DD §14]
+/// Manages autosave lifecycle — debounced saves on content change
 
 abstract class _$Autosave extends $Notifier<AutosaveService> {
   AutosaveService build();

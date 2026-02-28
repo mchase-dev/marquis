@@ -5,7 +5,7 @@ import 'package:marquis/providers/tab_manager_provider.dart';
 import 'package:marquis/providers/view_mode_provider.dart';
 import 'package:marquis/widgets/tab_bar/tab_item.dart';
 
-/// Horizontal tab strip with view mode selector [DD §6]
+/// Horizontal tab strip with view mode selector
 class AppTabBar extends ConsumerStatefulWidget {
   const AppTabBar({super.key});
 
@@ -136,7 +136,7 @@ class _AppTabBarState extends ConsumerState<AppTabBar> {
               icon: Icons.chevron_right,
               onPressed: _scrollRight,
             ),
-          // View mode selector [DD §10 — Layout Modes]
+          // View mode selector
           Padding(
             padding: const EdgeInsets.only(left: 4, right: 6),
             child: SegmentedButton<ViewMode>(

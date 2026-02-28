@@ -8,15 +8,15 @@ part of 'file_watcher_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Manages file watchers for open documents [DD §15]
+/// Manages file watchers for open documents
 
 @ProviderFor(FileWatcherNotifier)
 const fileWatcherProvider = FileWatcherNotifierProvider._();
 
-/// Manages file watchers for open documents [DD §15]
+/// Manages file watchers for open documents
 final class FileWatcherNotifierProvider
     extends $NotifierProvider<FileWatcherNotifier, FileWatcherService> {
-  /// Manages file watchers for open documents [DD §15]
+  /// Manages file watchers for open documents
   const FileWatcherNotifierProvider._()
     : super(
         from: null,
@@ -47,7 +47,7 @@ final class FileWatcherNotifierProvider
 String _$fileWatcherNotifierHash() =>
     r'54dc3e546529d05c8eab31d3b2629ad7defbf633';
 
-/// Manages file watchers for open documents [DD §15]
+/// Manages file watchers for open documents
 
 abstract class _$FileWatcherNotifier extends $Notifier<FileWatcherService> {
   FileWatcherService build();

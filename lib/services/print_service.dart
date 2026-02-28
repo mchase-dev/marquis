@@ -11,7 +11,7 @@ import 'package:printing/printing.dart';
 
 import 'markdown_pdf_renderer.dart';
 
-/// Converts Markdown to PDF for printing and export [DD §18].
+/// Converts Markdown to PDF for printing and export.
 class PrintService {
   PrintService._();
 

@@ -5,7 +5,7 @@ import 'package:re_editor/re_editor.dart';
 import 'package:marquis/providers/show_viewer_images_provider.dart';
 import 'package:marquis/services/formatting_service.dart';
 
-/// Slim toolbar with formatting buttons shown above the editor [DD §8 — Editor Toolbar]
+/// Slim toolbar with formatting buttons shown above the editor
 class EditorToolbar extends ConsumerWidget {
   final CodeLineEditingController controller;
   final VoidCallback? onCommandPalette;
@@ -101,9 +101,9 @@ class EditorToolbar extends ConsumerWidget {
             onPressed: () => FormattingService.horizontalRule(controller),
           ),
           _divider(context),
-          // Heading dropdown [DD §8 — H▼ heading dropdown]
+          // Heading dropdown
           _HeadingDropdown(controller: controller),
-          // Command palette [DD §11 — Invocation]
+          // Command palette
           if (onCommandPalette != null) ...[
             _divider(context),
             _ToolbarButton(

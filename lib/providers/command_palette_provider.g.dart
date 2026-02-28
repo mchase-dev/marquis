@@ -8,15 +8,15 @@ part of 'command_palette_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Manages command palette open/close and filter state [DD §4, §11]
+/// Manages command palette open/close and filter state
 
 @ProviderFor(CommandPaletteNotifier)
 const commandPaletteProvider = CommandPaletteNotifierProvider._();
 
-/// Manages command palette open/close and filter state [DD §4, §11]
+/// Manages command palette open/close and filter state
 final class CommandPaletteNotifierProvider
     extends $NotifierProvider<CommandPaletteNotifier, CommandPaletteState> {
-  /// Manages command palette open/close and filter state [DD §4, §11]
+  /// Manages command palette open/close and filter state
   const CommandPaletteNotifierProvider._()
     : super(
         from: null,
@@ -47,7 +47,7 @@ final class CommandPaletteNotifierProvider
 String _$commandPaletteNotifierHash() =>
     r'dfdfee1489074b1fe03a51f744acc88ebe49eeac';
 
-/// Manages command palette open/close and filter state [DD §4, §11]
+/// Manages command palette open/close and filter state
 
 abstract class _$CommandPaletteNotifier extends $Notifier<CommandPaletteState> {
   CommandPaletteState build();

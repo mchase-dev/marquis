@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Reusable error and warning dialogs for file operations [DD §24]
+/// Reusable error and warning dialogs for file operations
 class ErrorDialog {
   ErrorDialog._();
 

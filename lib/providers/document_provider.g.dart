@@ -8,17 +8,17 @@ part of 'document_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Per-tab document state, keyed by tab ID [DD §4 — documentProvider(tabId)]
+/// Per-tab document state, keyed by tab ID
 
 @ProviderFor(document)
 const documentProvider = DocumentFamily._();
 
-/// Per-tab document state, keyed by tab ID [DD §4 — documentProvider(tabId)]
+/// Per-tab document state, keyed by tab ID
 
 final class DocumentProvider
     extends $FunctionalProvider<DocumentState?, DocumentState?, DocumentState?>
     with $Provider<DocumentState?> {
-  /// Per-tab document state, keyed by tab ID [DD §4 — documentProvider(tabId)]
+  /// Per-tab document state, keyed by tab ID
   const DocumentProvider._({
     required DocumentFamily super.from,
     required String super.argument,
@@ -72,7 +72,7 @@ final class DocumentProvider
 
 String _$documentHash() => r'ffe5860c7757d89aa5303d938213e1acdbadb57a';
 
-/// Per-tab document state, keyed by tab ID [DD §4 — documentProvider(tabId)]
+/// Per-tab document state, keyed by tab ID
 
 final class DocumentFamily extends $Family
     with $FunctionalFamilyOverride<DocumentState?, String> {
@@ -85,7 +85,7 @@ final class DocumentFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// Per-tab document state, keyed by tab ID [DD §4 — documentProvider(tabId)]
+  /// Per-tab document state, keyed by tab ID
 
   DocumentProvider call(String tabId) =>
       DocumentProvider._(argument: tabId, from: this);
@@ -94,17 +94,17 @@ final class DocumentFamily extends $Family
   String toString() => r'documentProvider';
 }
 
-/// The currently active document [DD §4 — activeDocumentProvider]
+/// The currently active document
 
 @ProviderFor(activeDocument)
 const activeDocumentProvider = ActiveDocumentProvider._();
 
-/// The currently active document [DD §4 — activeDocumentProvider]
+/// The currently active document
 
 final class ActiveDocumentProvider
     extends $FunctionalProvider<DocumentState?, DocumentState?, DocumentState?>
     with $Provider<DocumentState?> {
-  /// The currently active document [DD §4 — activeDocumentProvider]
+  /// The currently active document
   const ActiveDocumentProvider._()
     : super(
         from: null,

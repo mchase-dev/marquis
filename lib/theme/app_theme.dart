@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-/// App-wide light and dark ThemeData definitions [DD §20]
+/// App-wide light and dark ThemeData definitions
 class AppTheme {
   AppTheme._();
 
-  /// Build a light ThemeData using the given accent color [DD §20 — Accent Color]
+  /// Build a light ThemeData using the given accent color
   static ThemeData light(Color accentColor) {
     return ThemeData(
       brightness: Brightness.light,
@@ -14,7 +14,7 @@ class AppTheme {
     );
   }
 
-  /// Build a dark ThemeData using the given accent color [DD §20 — Accent Color]
+  /// Build a dark ThemeData using the given accent color
   static ThemeData dark(Color accentColor) {
     return ThemeData(
       brightness: Brightness.dark,

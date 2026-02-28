@@ -2,7 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'command_palette_provider.g.dart';
 
-/// State for the command palette [DD §11]
+/// State for the command palette
 class CommandPaletteState {
   final bool isOpen;
   final String filterText;
@@ -23,7 +23,7 @@ class CommandPaletteState {
   }
 }
 
-/// Manages command palette open/close and filter state [DD §4, §11]
+/// Manages command palette open/close and filter state
 @Riverpod(keepAlive: true)
 class CommandPaletteNotifier extends _$CommandPaletteNotifier {
   @override

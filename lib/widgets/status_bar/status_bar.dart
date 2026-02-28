@@ -7,7 +7,7 @@ import 'package:marquis/providers/hovered_link_provider.dart';
 import 'package:marquis/providers/save_status_provider.dart';
 import 'package:marquis/providers/view_mode_provider.dart';
 
-/// Bottom status bar showing document info [DD §5 — Status Bar]
+/// Bottom status bar showing document info
 class StatusBar extends ConsumerWidget {
   const StatusBar({super.key});
 

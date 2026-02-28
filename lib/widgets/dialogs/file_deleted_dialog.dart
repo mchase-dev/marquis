@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Result of the file-deleted dialog [DD §15 — Case 3]
+/// Result of the file-deleted dialog
 enum FileDeletedResult { saveToOriginal, saveAs, closeTab }
 
 /// Shown when a file has been deleted from disk while open

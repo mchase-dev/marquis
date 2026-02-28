@@ -8,7 +8,7 @@ import 'package:marquis/theme/app_theme.dart';
 
 part 'theme_provider.g.dart';
 
-/// Derives the ThemeMode from user preferences [DD §20 — Theme Implementation]
+/// Derives the ThemeMode from user preferences
 @riverpod
 ThemeMode themeMode(Ref ref) {
   final prefsAsync = ref.watch(preferencesProvider);
@@ -22,7 +22,7 @@ ThemeMode themeMode(Ref ref) {
   };
 }
 
-/// Derives the accent Color from user preferences [DD §20 — Accent Color]
+/// Derives the accent Color from user preferences
 @riverpod
 Color accentColor(Ref ref) {
   final prefsAsync = ref.watch(preferencesProvider);

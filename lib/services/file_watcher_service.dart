@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:watcher/watcher.dart';
 
-/// Watches files on disk for external changes [DD §15]
+/// Watches files on disk for external changes
 class FileWatcherService {
   final Map<String, StreamSubscription<WatchEvent>> _watchers = {};
   final Map<String, Timer> _debounceTimers = {};

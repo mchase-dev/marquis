@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 
 import 'package:marquis/models/command_item.dart';
 
-/// Static command data for the command palette [DD §11]
+/// Static command data for the command palette
 class CommandData {
   CommandData._();
 
-  /// All markdown snippet commands [DD §11 — Markdown Snippets table]
+  /// All markdown snippet commands
   static List<CommandItem> snippets() {
     return const [
       CommandItem(
@@ -164,7 +164,7 @@ class CommandData {
     ];
   }
 
-  /// Build app commands with action callbacks [DD §11 — App Commands]
+  /// Build app commands with action callbacks
   static List<CommandItem> appCommands({
     required VoidCallback onNewFile,
     required VoidCallback onOpenFile,
@@ -287,7 +287,7 @@ class CommandData {
     ];
   }
 
-  /// Fuzzy match filter [DD §11 — Implementation Details]
+  /// Fuzzy match filter
   static bool matchesFilter(CommandItem item, String query) {
     if (query.isEmpty) return true;
     final lowerQuery = query.toLowerCase();

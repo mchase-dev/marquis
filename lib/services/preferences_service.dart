@@ -6,7 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:marquis/core/constants.dart';
 import 'package:marquis/models/preferences_state.dart';
 
-/// Handles reading/writing preferences to a JSON file [DD §17, §24]
+/// Handles reading/writing preferences to a JSON file
 class PreferencesService {
   static const String _fileName = 'preferences.json';
 
@@ -31,7 +31,7 @@ class PreferencesService {
   }
 
   /// Load preferences from disk. Returns defaults if file doesn't exist
-  /// or is corrupt [DD §24 — Preferences file corrupt]
+  /// or is corrupt
   Future<PreferencesState> load() async {
     try {
       final path = await _filePath;
@@ -45,7 +45,7 @@ class PreferencesService {
       final json = jsonDecode(contents) as Map<String, dynamic>;
       return PreferencesState.fromJson(json);
     } on FormatException {
-      // Corrupt JSON — backup and reset [DD §24]
+      // Corrupt JSON — backup and reset
       await _backupCorruptFile();
       return const PreferencesState();
     } catch (e) {
@@ -69,7 +69,7 @@ class PreferencesService {
     await file.writeAsString(json);
   }
 
-  /// Backup a corrupt preferences file before resetting [DD §24]
+  /// Backup a corrupt preferences file before resetting
   Future<void> _backupCorruptFile() async {
     try {
       final path = await _filePath;

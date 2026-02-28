@@ -1,4 +1,4 @@
-/// Represents the state of a single open document [DD §7]
+/// Represents the state of a single open document
 class DocumentState {
   final String id;
   final String content;
@@ -24,16 +24,16 @@ class DocumentState {
     this.helpTitle,
   });
 
-  /// Whether the document has unsaved changes [DD §6 — Dirty state]
+  /// Whether the document has unsaved changes
   bool get isDirty => content != (lastSavedContent ?? '');
 
-  /// Whether this is an untitled/new file [DD §6 — New/Untitled state]
+  /// Whether this is an untitled/new file
   bool get isUntitled => filePath == null;
 
-  /// Whether this is a help document [DD §12 — Help Content]
+  /// Whether this is a help document
   bool get isHelpDocument => helpTitle != null;
 
-  /// Display name for tabs and title bar [DD §5, §6]
+  /// Display name for tabs and title bar
   String get displayName {
     if (helpTitle != null) return helpTitle!;
     if (filePath != null) {

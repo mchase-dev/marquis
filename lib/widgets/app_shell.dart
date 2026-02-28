@@ -39,7 +39,7 @@ import 'package:marquis/widgets/tab_bar/app_tab_bar.dart';
 import 'package:marquis/widgets/viewer/viewer_pane.dart';
 import 'package:marquis/widgets/welcome/welcome_screen.dart';
 
-/// Top-level layout scaffold [DD §5 — Window Layout]
+/// Top-level layout scaffold
 class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key});
 
@@ -63,7 +63,7 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
   // Tracks which pane last received a pointer-down (for context-sensitive find)
   bool _viewerHasFocus = false;
 
-  // Scroll controllers for sync [DD §10 — Scroll Synchronization]
+  // Scroll controllers for sync
   final _viewerScrollController = ScrollController();
   final _editorVerticalScroller = ScrollController();
   bool _isSyncingScroll = false;
@@ -78,24 +78,24 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
     _viewerScrollController.addListener(_onViewerScroll);
     HardwareKeyboard.instance.addHandler(_handleGlobalKeyEvent);
 
-    // Register file watcher callback for conflict/deletion dialogs [DD §15]
+    // Register file watcher callback for conflict/deletion dialogs
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(fileWatcherProvider.notifier).onFileEvent = _onFileEvent;
       ref.read(fileWatcherProvider.notifier).onFileReloaded = _onFileReloaded;
 
-      // Register error callbacks for file operations [DD §24]
+      // Register error callbacks for file operations
       final tabManager = ref.read(tabManagerProvider.notifier);
       tabManager.onError = _onFileError;
       tabManager.onWarning = _onFileWarning;
       tabManager.onInfo = _showInfoSnackBar;
       ref.read(autosaveProvider.notifier).onSaveError = _onSaveError;
 
-      // Listen for tab switches to trigger autosave [DD §14]
+      // Listen for tab switches to trigger autosave
       ref.listenManual(tabManagerProvider.select((s) => s.activeTabIndex), (_, _) {
         ref.read(autosaveProvider.notifier).saveAllDirty();
       });
 
-      // Initialize app_links for single-instance file open [DD §19]
+      // Initialize app_links for single-instance file open
       ref.read(appLinksProvider.notifier).init(initialArgs);
     });
   }
@@ -113,7 +113,7 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
   }
 
   // ---------------------------------------------------------------------------
-  // Scroll sync [DD §10]
+  // Scroll sync
   // ---------------------------------------------------------------------------
 
   void _onEditorScroll() {
@@ -141,7 +141,7 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
   }
 
   // ---------------------------------------------------------------------------
-  // Window state persistence [DD §5]
+  // Window state persistence
   // ---------------------------------------------------------------------------
 
   Future<void> _captureWindowState() async {
@@ -238,7 +238,7 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
 
   @override
   void onWindowBlur() {
-    // Auto-save all dirty documents when window loses focus [DD §14]
+    // Auto-save all dirty documents when window loses focus
     ref.read(autosaveProvider.notifier).saveAllDirty();
   }
 
@@ -322,7 +322,7 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
   }
 
   void _onFind() {
-    // Context-sensitive find [DD §16]
+    // Context-sensitive find
     final viewMode = ref.read(viewModeProvider);
     final activeDoc = ref.read(activeDocumentProvider);
     // Compute effective view mode (same logic as build)
@@ -351,7 +351,7 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
   }
 
   void _onFindReplace() {
-    // Context-sensitive find/replace [DD §16]
+    // Context-sensitive find/replace
     final viewMode = ref.read(viewModeProvider);
     final activeDoc = ref.read(activeDocumentProvider);
     final effectiveViewMode = (activeDoc != null &&
@@ -512,7 +512,7 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
   }
 
   // ---------------------------------------------------------------------------
-  // File watcher conflict/deletion handling [DD §15]
+  // File watcher conflict/deletion handling
   // ---------------------------------------------------------------------------
 
   void _onFileReloaded(String fileName) {
@@ -570,7 +570,7 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
   }
 
   // ---------------------------------------------------------------------------
-  // File operation error handling [DD §24]
+  // File operation error handling
   // ---------------------------------------------------------------------------
 
   void _onFileError(String title, String message) {
@@ -601,14 +601,14 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
   }
 
   // ---------------------------------------------------------------------------
-  // Command palette handling [DD §11]
+  // Command palette handling
   // ---------------------------------------------------------------------------
 
   void _onCommandSelected(CommandItem item) {
     ref.read(commandPaletteProvider.notifier).close();
 
     if (item.isSnippet) {
-      // Ensure editor is open [DD §11 — "If the editor is not open..."]
+      // Ensure editor is open
       final viewMode = ref.read(viewModeProvider);
       if (viewMode == ViewMode.viewerOnly) {
         ref.read(viewModeProvider.notifier).toggleEdit();
@@ -647,7 +647,7 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
   }
 
   // ---------------------------------------------------------------------------
-  // Global keyboard shortcuts via HardwareKeyboard [DD §13]
+  // Global keyboard shortcuts via HardwareKeyboard
   //
   // We use HardwareKeyboard.instance.addHandler() instead of
   // CallbackShortcuts because CallbackShortcuts relies on focus-tree
@@ -706,32 +706,32 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
     const SingleActivator(LogicalKeyboardKey.keyQ, control: true): _quit,
     const SingleActivator(LogicalKeyboardKey.comma, control: true): _onPreferences,
 
-    // Command palette [DD §11]
+    // Command palette
     const SingleActivator(LogicalKeyboardKey.slash, control: true): _toggleCommandPalette,
 
-    // View mode toggles [DD §10]
+    // View mode toggles
     const SingleActivator(LogicalKeyboardKey.keyE, control: true): () =>
         ref.read(viewModeProvider.notifier).toggleEdit(),
     const SingleActivator(LogicalKeyboardKey.keyE, control: true, shift: true): () =>
         ref.read(viewModeProvider.notifier).toggleEditorOnly(),
 
-    // Find [DD §16]
+    // Find
     const SingleActivator(LogicalKeyboardKey.keyF, control: true): _onFind,
     const SingleActivator(LogicalKeyboardKey.keyH, control: true): _onFindReplace,
 
-    // Zoom [DD §13]
+    // Zoom
     const SingleActivator(LogicalKeyboardKey.equal, control: true): _zoomIn,
     const SingleActivator(LogicalKeyboardKey.minus, control: true): _zoomOut,
     const SingleActivator(LogicalKeyboardKey.digit0, control: true): _zoomReset,
 
-    // Full screen [DD §13]
+    // Full screen
     const SingleActivator(LogicalKeyboardKey.f11): _toggleFullScreen,
 
-    // Tab navigation [DD §13]
+    // Tab navigation
     const SingleActivator(LogicalKeyboardKey.tab, control: true): _nextTab,
     const SingleActivator(LogicalKeyboardKey.tab, control: true, shift: true): _previousTab,
 
-    // Go to tab 1–9 (Alt+1 through Alt+9) [DD §13]
+    // Go to tab 1–9 (Alt+1 through Alt+9)
     const SingleActivator(LogicalKeyboardKey.digit1, alt: true): () => _goToTab(0),
     const SingleActivator(LogicalKeyboardKey.digit2, alt: true): () => _goToTab(1),
     const SingleActivator(LogicalKeyboardKey.digit3, alt: true): () => _goToTab(2),
@@ -902,7 +902,7 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
       child: Stack(
         children: [
           withMenuBar,
-          // Command palette overlay [DD §11]
+          // Command palette overlay
           if (paletteState.isOpen)
             CommandPalette(
               commands: _buildCommandList(),

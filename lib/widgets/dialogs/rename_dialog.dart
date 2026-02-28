@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-/// Dialog for renaming a file [DD §12 — Rename File Behavior]
+/// Dialog for renaming a file
 class RenameDialog extends StatefulWidget {
   final String currentFileName;
   final String currentFilePath;
@@ -73,11 +73,11 @@ class _RenameDialogState extends State<RenameDialog> {
       return;
     }
 
-    // Build new path (same directory, new name) [DD §12 — step 3]
+    // Build new path (same directory, new name)
     final dir = File(widget.currentFilePath).parent.path;
     final newPath = '$dir${Platform.pathSeparator}$newName';
 
-    // Check if name already exists [DD §12 — step 6]
+    // Check if name already exists
     if (await File(newPath).exists()) {
       setState(() => _error = 'A file with that name already exists');
       return;

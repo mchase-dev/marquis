@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-/// Result of a save prompt dialog [DD §5 — Close behavior]
+/// Result of a save prompt dialog
 enum SaveDialogResult { save, discard, cancel }
 
-/// "Save changes before closing?" dialog [DD §5, §7]
+/// "Save changes before closing?" dialog
 class SaveDialog extends StatelessWidget {
   final int fileCount;
   final String? fileName;

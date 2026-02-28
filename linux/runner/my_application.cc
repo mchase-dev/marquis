@@ -23,7 +23,7 @@ static void first_frame_cb(MyApplication* self, FlView* view) {
 static void my_application_activate(GApplication* application) {
   MyApplication* self = MY_APPLICATION(application);
 
-  // If a window already exists, just present it (single-instance) [DD §19]
+  // If a window already exists, just present it (single-instance)
   GList* windows = gtk_application_get_windows(GTK_APPLICATION(application));
   if (windows) {
     gtk_window_present(GTK_WINDOW(windows->data));
@@ -116,7 +116,7 @@ static gboolean my_application_local_command_line(GApplication* application,
   *exit_status = 0;
 
   // Return FALSE so GApplication forwards args to the primary instance
-  // via D-Bus when a second instance launches [DD §19 — Linux]
+  // via D-Bus when a second instance launches
   return FALSE;
 }
 

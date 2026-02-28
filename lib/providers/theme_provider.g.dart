@@ -8,17 +8,17 @@ part of 'theme_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Derives the ThemeMode from user preferences [DD §20 — Theme Implementation]
+/// Derives the ThemeMode from user preferences
 
 @ProviderFor(themeMode)
 const themeModeProvider = ThemeModeProvider._();
 
-/// Derives the ThemeMode from user preferences [DD §20 — Theme Implementation]
+/// Derives the ThemeMode from user preferences
 
 final class ThemeModeProvider
     extends $FunctionalProvider<ThemeMode, ThemeMode, ThemeMode>
     with $Provider<ThemeMode> {
-  /// Derives the ThemeMode from user preferences [DD §20 — Theme Implementation]
+  /// Derives the ThemeMode from user preferences
   const ThemeModeProvider._()
     : super(
         from: null,
@@ -54,16 +54,16 @@ final class ThemeModeProvider
 
 String _$themeModeHash() => r'021e1a514b8775e0a9dc485d37b6a44048d11220';
 
-/// Derives the accent Color from user preferences [DD §20 — Accent Color]
+/// Derives the accent Color from user preferences
 
 @ProviderFor(accentColor)
 const accentColorProvider = AccentColorProvider._();
 
-/// Derives the accent Color from user preferences [DD §20 — Accent Color]
+/// Derives the accent Color from user preferences
 
 final class AccentColorProvider extends $FunctionalProvider<Color, Color, Color>
     with $Provider<Color> {
-  /// Derives the accent Color from user preferences [DD §20 — Accent Color]
+  /// Derives the accent Color from user preferences
   const AccentColorProvider._()
     : super(
         from: null,

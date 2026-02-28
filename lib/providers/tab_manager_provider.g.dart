@@ -8,15 +8,15 @@ part of 'tab_manager_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Manages all open tabs and their documents [DD §6, §7]
+/// Manages all open tabs and their documents
 
 @ProviderFor(TabManager)
 const tabManagerProvider = TabManagerProvider._();
 
-/// Manages all open tabs and their documents [DD §6, §7]
+/// Manages all open tabs and their documents
 final class TabManagerProvider
     extends $NotifierProvider<TabManager, TabManagerState> {
-  /// Manages all open tabs and their documents [DD §6, §7]
+  /// Manages all open tabs and their documents
   const TabManagerProvider._()
     : super(
         from: null,
@@ -46,7 +46,7 @@ final class TabManagerProvider
 
 String _$tabManagerHash() => r'fa3bbddf3e66ff9fb6a11c590ad221d7045287f3';
 
-/// Manages all open tabs and their documents [DD §6, §7]
+/// Manages all open tabs and their documents
 
 abstract class _$TabManager extends $Notifier<TabManagerState> {
   TabManagerState build();

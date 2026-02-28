@@ -8,7 +8,7 @@ import 'package:marquis/models/preferences_state.dart';
 import 'package:marquis/providers/preferences_provider.dart';
 import 'package:marquis/theme/app_theme.dart';
 
-/// Preferences dialog with live-apply settings [DD §17, §20]
+/// Preferences dialog with live-apply settings
 class PreferencesDialog extends ConsumerStatefulWidget {
   const PreferencesDialog({super.key});
 
@@ -30,7 +30,7 @@ class _PreferencesDialogState extends ConsumerState<PreferencesDialog>
   final _hexFocusNode = FocusNode();
   bool _hexFieldHasFocus = false;
 
-  // Preset accent colors [DD §20]
+  // Preset accent colors
   static const _presetColors = [
     '#6C63FF', '#2196F3', '#00BCD4', '#4CAF50', '#FF9800', '#F44336',
     '#E91E63', '#9C27B0', '#795548', '#607D8B', '#009688', '#FF5722',

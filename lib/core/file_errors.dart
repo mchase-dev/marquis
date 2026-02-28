@@ -1,4 +1,4 @@
-/// Thrown when a file does not exist at the given path. [DD §24]
+/// Thrown when a file does not exist at the given path.
 class FileNotFoundException implements Exception {
   final String path;
   const FileNotFoundException(this.path);

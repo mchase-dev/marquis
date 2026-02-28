@@ -2,7 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'cursor_position_provider.g.dart';
 
-/// Cursor position state for status bar [DD §5 — Status Bar]
+/// Cursor position state for status bar
 typedef CursorPosition = ({int line, int column});
 
 @Riverpod(keepAlive: true)

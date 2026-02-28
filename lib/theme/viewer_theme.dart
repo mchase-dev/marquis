@@ -3,7 +3,7 @@ import 'package:flutter_highlight/themes/github.dart';
 import 'package:flutter_highlight/themes/monokai-sublime.dart';
 import 'package:markdown_widget/markdown_widget.dart';
 
-/// Viewer-specific MarkdownConfig for light and dark modes [DD §20 — Viewer Theming]
+/// Viewer-specific MarkdownConfig for light and dark modes
 class ViewerTheme {
   ViewerTheme._();
 

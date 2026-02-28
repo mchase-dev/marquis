@@ -5,7 +5,7 @@ import 'package:marquis/core/constants.dart';
 import 'package:marquis/providers/theme_provider.dart';
 import 'package:marquis/widgets/app_shell.dart';
 
-/// Root widget for the Marquis app [DD §4, §5]
+/// Root widget for the Marquis app
 class MarquisApp extends ConsumerWidget {
   const MarquisApp({super.key});
 

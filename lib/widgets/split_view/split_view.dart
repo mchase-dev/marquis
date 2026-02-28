@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:marquis/core/constants.dart';
 import 'package:marquis/providers/view_mode_provider.dart';
 
-/// Split view container with editor left and viewer right [DD §10]
+/// Split view container with editor left and viewer right
 class SplitView extends StatefulWidget {
   final ViewMode viewMode;
   final Widget editor;
@@ -65,7 +65,7 @@ class _SplitViewState extends State<SplitView> {
                 width: editorWidth,
                 child: widget.editor,
               ),
-            // Draggable divider [DD §10 — Resizable Divider]
+            // Draggable divider
             if (showDivider)
               GestureDetector(
                 onHorizontalDragUpdate: (details) {
@@ -85,7 +85,7 @@ class _SplitViewState extends State<SplitView> {
                     color: Colors.transparent,
                     child: Center(
                       child: Container(
-                        width: 4, // 4px visible [DD §10]
+                        width: 4, // 4px visible
                         color: Theme.of(context).dividerColor,
                       ),
                     ),
