@@ -24,14 +24,23 @@ class FileService {
         .toList();
   }
 
-  /// Show a native Save As dialog and return the selected path
+  /// Show a native Save As dialog and return the selected path.
+  ///
+  /// If the user-chosen filename lacks a recognized Markdown extension
+  /// (`.md` or `.markdown`), `.md` is appended automatically.
   Future<String?> pickSaveAsPath({String? defaultFileName}) async {
-    return await FilePicker.platform.saveFile(
+    final path = await FilePicker.platform.saveFile(
       dialogTitle: 'Save As',
       fileName: defaultFileName ?? 'Untitled.md',
       type: FileType.custom,
       allowedExtensions: AppConstants.markdownExtensions,
     );
+    if (path == null) return null;
+
+    final lower = path.toLowerCase();
+    final hasExtension = AppConstants.markdownExtensions
+        .any((ext) => lower.endsWith('.$ext'));
+    return hasExtension ? path : '$path.md';
   }
 
   /// Read a file from disk

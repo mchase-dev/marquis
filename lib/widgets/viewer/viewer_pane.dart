@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/gestures.dart';
@@ -138,6 +139,38 @@ class ViewerPane extends ConsumerStatefulWidget {
 class ViewerPaneState extends ConsumerState<ViewerPane> {
   bool _showFindBar = false;
   Map<String, GlobalKey> _anchorKeys = {};
+  late String _renderedContent;
+  Timer? _debounce;
+
+  // Cache for expensive markdown widget tree
+  Widget? _cachedColumn;
+  String? _cachedContentKey;
+  bool? _cachedShowImages;
+  double? _cachedFontSize;
+  bool? _cachedIsDark;
+
+  @override
+  void initState() {
+    super.initState();
+    _renderedContent = widget.content;
+  }
+
+  @override
+  void didUpdateWidget(ViewerPane oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.content != oldWidget.content) {
+      _debounce?.cancel();
+      _debounce = Timer(const Duration(milliseconds: 300), () {
+        if (mounted) setState(() => _renderedContent = widget.content);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
 
   /// Open viewer find bar (Ctrl+F in viewer context)
   void showFind() {
@@ -312,6 +345,23 @@ class ViewerPaneState extends ConsumerState<ViewerPane> {
     );
   }
 
+  /// Returns cached markdown widget tree, only rebuilding when inputs change.
+  Widget _getMarkdownColumn(MarkdownConfig config, {required bool showImages, required bool isDark, required double fontSize}) {
+    if (_cachedColumn != null &&
+        _cachedContentKey == _renderedContent &&
+        _cachedShowImages == showImages &&
+        _cachedFontSize == fontSize &&
+        _cachedIsDark == isDark) {
+      return _cachedColumn!;
+    }
+    _cachedColumn = _buildMarkdownColumn(_renderedContent, config, showImages: showImages);
+    _cachedContentKey = _renderedContent;
+    _cachedShowImages = showImages;
+    _cachedFontSize = fontSize;
+    _cachedIsDark = isDark;
+    return _cachedColumn!;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -344,13 +394,13 @@ class ViewerPaneState extends ConsumerState<ViewerPane> {
                   ),
                 )
               : _MarkdownErrorBoundary(
-                  rawContent: widget.content,
+                  rawContent: _renderedContent,
                   child: Align(
                     alignment: Alignment.topLeft,
                     child: SingleChildScrollView(
                       controller: widget.scrollController,
                       padding: const EdgeInsets.fromLTRB(24, 6, 24, 24),
-                      child: _buildMarkdownColumn(widget.content, config, showImages: showImages),
+                      child: _getMarkdownColumn(config, showImages: showImages, isDark: isDark, fontSize: effectiveFontSize),
                     ),
                   ),
                 ),

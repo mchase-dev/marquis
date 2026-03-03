@@ -257,6 +257,7 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
     if (doc != null && doc.isDirty) {
       _showSavePromptForTab(activeId, doc.displayName);
     } else {
+      _editorKey.currentState?.disposeTab(activeId);
       tabManager.closeTab(activeId);
     }
   }
@@ -292,6 +293,7 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
       final saved = await tabManager.saveDocument(tabId);
       if (!saved) return;
     }
+    _editorKey.currentState?.disposeTab(tabId);
     tabManager.closeTab(tabId);
   }
 
@@ -557,6 +559,7 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
     final tabManager = ref.read(tabManagerProvider.notifier);
     switch (result) {
       case FileDeletedResult.closeTab:
+        _editorKey.currentState?.disposeTab(tabId);
         tabManager.closeTab(tabId);
       case FileDeletedResult.saveAs:
         await tabManager.saveDocument(tabId);
@@ -746,6 +749,11 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
   Map<ShortcutActivator, VoidCallback> _formattingShortcuts(
     CodeLineEditingController controller,
   ) => {
+    // Redo (Ctrl+Shift+Z and Ctrl+Y)
+    const SingleActivator(LogicalKeyboardKey.keyZ, control: true, shift: true): () =>
+        controller.redo(),
+    const SingleActivator(LogicalKeyboardKey.keyY, control: true): () =>
+        controller.redo(),
     const SingleActivator(LogicalKeyboardKey.keyB, control: true): () =>
         FormattingService.bold(controller),
     const SingleActivator(LogicalKeyboardKey.keyI, control: true): () =>

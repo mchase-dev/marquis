@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:marquis/providers/preferences_provider.dart';
+import 'package:marquis/providers/show_viewer_images_provider.dart';
 import 'package:marquis/providers/tab_manager_provider.dart';
 import 'package:marquis/providers/view_mode_provider.dart';
 
@@ -81,6 +82,7 @@ class AppMenuBar extends ConsumerWidget {
     final viewMode = ref.watch(viewModeProvider);
     final recentFiles = ref.watch(preferencesProvider).value?.general.recentFiles ?? [];
     final hasActiveTab = ref.watch(tabManagerProvider).hasTabs;
+    final showImages = ref.watch(showViewerImagesProvider);
 
     return PlatformMenuBar(
       menus: [
@@ -275,6 +277,13 @@ class AppMenuBar extends ConsumerWidget {
             ),
             const PlatformMenuItemGroup(members: []),
             PlatformMenuItem(
+              label: 'Show Images in Viewer${showImages ? '  ✓' : ''}',
+              onSelected: hasActiveTab
+                  ? () => ref.read(showViewerImagesProvider.notifier).toggle()
+                  : null,
+            ),
+            const PlatformMenuItemGroup(members: []),
+            PlatformMenuItem(
               label: 'Full Screen',
               shortcut: const SingleActivator(LogicalKeyboardKey.keyF, meta: true, control: true),
               onSelected: onToggleFullScreen,
@@ -328,6 +337,7 @@ class AppMenuBar extends ConsumerWidget {
     final viewMode = ref.watch(viewModeProvider);
     final recentFiles = ref.watch(preferencesProvider).value?.general.recentFiles ?? [];
     final hasActiveTab = ref.watch(tabManagerProvider).hasTabs;
+    final showImages = ref.watch(showViewerImagesProvider);
 
     return Column(
       children: [
@@ -537,6 +547,16 @@ class AppMenuBar extends ConsumerWidget {
                     trailingIcon: _shortcutLabel('Ctrl+0'),
                     onPressed: hasActiveTab ? onZoomReset : null,
                     child: const Text('Reset Zoom'),
+                  ),
+                  const Divider(height: 1),
+                  MenuItemButton(
+                    onPressed: hasActiveTab
+                        ? () => ref.read(showViewerImagesProvider.notifier).toggle()
+                        : null,
+                    leadingIcon: showImages
+                        ? const Icon(Icons.check, size: 16)
+                        : const SizedBox(width: 16),
+                    child: const Text('Show Images in Viewer'),
                   ),
                   const Divider(height: 1),
                   MenuItemButton(
