@@ -44,11 +44,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
       if (existing != nullptr) {
         std::wstring uri = FilePathToUri(argv[1]);
 
+        // Convert wide URI to UTF-8 — app_links reads WM_COPYDATA as char*.
+        int utf8Len = ::WideCharToMultiByte(
+            CP_UTF8, 0, uri.c_str(), -1, nullptr, 0, nullptr, nullptr);
+        std::string utf8Uri(utf8Len, '\0');
+        ::WideCharToMultiByte(
+            CP_UTF8, 0, uri.c_str(), -1, &utf8Uri[0], utf8Len,
+            nullptr, nullptr);
+
         COPYDATASTRUCT cds = {};
         cds.dwData = kAppLinkMessage;
-        cds.cbData = static_cast<DWORD>(
-            (uri.size() + 1) * sizeof(wchar_t));
-        cds.lpData = const_cast<wchar_t*>(uri.c_str());
+        cds.cbData = static_cast<DWORD>(utf8Len);
+        cds.lpData = const_cast<char*>(utf8Uri.c_str());
 
         ::SendMessageW(existing, WM_COPYDATA,
                         reinterpret_cast<WPARAM>(nullptr),
@@ -89,7 +96,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   FlutterWindow window(project);
   Win32Window::Point origin(10, 10);
   Win32Window::Size size(1280, 720);
-  if (!window.Create(L"marquis", origin, size)) {
+  if (!window.Create(L"Marquis", origin, size)) {
     return EXIT_FAILURE;
   }
   window.SetQuitOnClose(true);

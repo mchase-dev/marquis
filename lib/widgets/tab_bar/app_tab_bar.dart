@@ -123,6 +123,7 @@ class _AppTabBarState extends ConsumerState<AppTabBar> {
                     isDirty: doc.isDirty,
                     isActive: index == tabState.activeTabIndex,
                     isConflict: doc.isExternallyModified,
+                    filePath: doc.filePath,
                     onTap: () => tabManager.setActiveTab(index),
                     onClose: () => _handleCloseTab(context, ref, tabId),
                   ),

@@ -8,9 +8,11 @@ import 'package:markdown_widget/markdown_widget.dart';
 import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:marquis/core/constants.dart';
 import 'package:marquis/providers/hovered_link_provider.dart';
 import 'package:marquis/providers/preferences_provider.dart';
 import 'package:marquis/providers/show_viewer_images_provider.dart';
+import 'package:marquis/providers/tab_manager_provider.dart';
 import 'package:marquis/theme/viewer_theme.dart';
 import 'package:marquis/widgets/viewer/viewer_find_bar.dart';
 
@@ -215,6 +217,24 @@ class ViewerPaneState extends ConsumerState<ViewerPane> {
     }
   }
 
+  /// Open a relative markdown file link in a new tab, resolving the path
+  /// relative to the current document's directory.
+  void _openMarkdownLink(String url) {
+    String resolvedPath = url;
+    if (!p.isAbsolute(url) && widget.filePath != null) {
+      resolvedPath = p.normalize(p.join(p.dirname(widget.filePath!), url));
+    }
+
+    final file = File(resolvedPath);
+    if (file.existsSync()) {
+      ref.read(tabManagerProvider.notifier).openFile(resolvedPath);
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('File not found: $url')),
+      );
+    }
+  }
+
   /// Build a widget for a markdown image, resolving local paths relative to
   /// the document directory.
   Widget _buildImage(String url, Map<String, String> attributes) {
@@ -295,6 +315,7 @@ class ViewerPaneState extends ConsumerState<ViewerPane> {
             onHoverChanged: (url) =>
                 ref.read(hoveredLinkProvider.notifier).set(url),
             onAnchorTap: _scrollToAnchor,
+            onLinkTap: (url) => _openMarkdownLink(url),
           ),
         ),
       ],
@@ -494,9 +515,10 @@ class _HoverableLinkNode extends ElementNode {
   final LinkConfig linkConfig;
   final ValueChanged<String?> onHoverChanged;
   final ValueChanged<String>? onAnchorTap;
+  final ValueChanged<String>? onLinkTap;
 
   _HoverableLinkNode(this.attributes, this.linkConfig,
-      {required this.onHoverChanged, this.onAnchorTap});
+      {required this.onHoverChanged, this.onAnchorTap, this.onLinkTap});
 
   @override
   InlineSpan build() {
@@ -518,11 +540,17 @@ class _HoverableLinkNode extends ElementNode {
       onAnchorTap?.call(url.substring(1));
       return;
     }
-    if (linkConfig.onTap != null) {
-      linkConfig.onTap?.call(url);
-    } else {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
       launchUrl(Uri.parse(url));
+      return;
     }
+    // Check if the link points to a markdown file
+    final ext = p.extension(url).toLowerCase().replaceFirst('.', '');
+    if (AppConstants.markdownExtensions.contains(ext)) {
+      onLinkTap?.call(url);
+      return;
+    }
+    launchUrl(Uri.parse(url));
   }
 
   @override

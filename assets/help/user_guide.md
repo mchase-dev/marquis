@@ -109,6 +109,33 @@ Use **File > Print** (Ctrl+P) to print the current document. The Markdown is con
 
 ---
 
+## File Associations
+
+Marquis can be set as the default app for `.md` and `.markdown` files so that double-clicking a Markdown file opens it in Marquis.
+
+### Windows
+
+The installer offers to create file associations during setup. On **Windows 11**, these may not take effect automatically. To set them manually:
+
+1. Open **Settings > Apps > Default apps**
+2. Search for **Marquis**
+3. Click on Marquis in the results
+4. Click the `.md` and/or `.markdown` entry and select **Marquis** as the default
+
+### macOS
+
+Right-click a `.md` file in Finder, select **Get Info**, change **Open with** to Marquis, then click **Change All**.
+
+### Linux
+
+If installed via the `.deb` package, Marquis registers itself for `text/markdown` files. Your desktop environment should offer Marquis as an option when opening Markdown files. To set it as the default, use your file manager's "Open With" settings or run:
+
+```bash
+xdg-mime default marquis.desktop text/markdown
+```
+
+---
+
 ## Keyboard Shortcuts Reference
 
 ### Global
