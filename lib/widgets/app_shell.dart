@@ -63,10 +63,45 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
   // Tracks which pane last received a pointer-down (for context-sensitive find)
   bool _viewerHasFocus = false;
 
-  // Scroll controllers for sync
-  final _viewerScrollController = ScrollController();
-  final _editorVerticalScroller = ScrollController();
+  // Per-tab scroll controllers for sync.
+  // keepScrollOffset is disabled to prevent PageStorage from leaking scroll
+  // offsets between tabs (all tabs share the same widget-tree position).
+  // Offsets are saved/restored manually on tab switch instead.
+  final Map<String, ScrollController> _viewerScrollControllers = {};
+  final Map<String, ScrollController> _editorScrollControllers = {};
+  final Map<String, ScrollController> _editorHScrollControllers = {};
+  final Map<String, CodeScrollController> _codeScrollControllers = {};
+  final Map<String, double> _viewerScrollOffsets = {};
+  final Map<String, double> _editorScrollOffsets = {};
   bool _isSyncingScroll = false;
+  bool _suppressScrollSync = false;
+
+  ScrollController _viewerControllerFor(String tabId) {
+    return _viewerScrollControllers.putIfAbsent(tabId, () {
+      final c = ScrollController(keepScrollOffset: false);
+      c.addListener(_onViewerScroll);
+      return c;
+    });
+  }
+
+  ScrollController _editorControllerFor(String tabId) {
+    return _editorScrollControllers.putIfAbsent(tabId, () {
+      final c = ScrollController(keepScrollOffset: false);
+      c.addListener(_onEditorScroll);
+      return c;
+    });
+  }
+
+  CodeScrollController _codeScrollControllerFor(String tabId) {
+    return _codeScrollControllers.putIfAbsent(tabId, () {
+      final h = _editorHScrollControllers.putIfAbsent(
+        tabId, () => ScrollController(keepScrollOffset: false));
+      return CodeScrollController(
+        verticalScroller: _editorControllerFor(tabId),
+        horizontalScroller: h,
+      );
+    });
+  }
 
   @override
   void initState() {
@@ -74,8 +109,6 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
     windowManager.addListener(this);
     windowManager.setPreventClose(true);
     _captureWindowState();
-    _editorVerticalScroller.addListener(_onEditorScroll);
-    _viewerScrollController.addListener(_onViewerScroll);
     HardwareKeyboard.instance.addHandler(_handleGlobalKeyEvent);
 
     // Register file watcher callback for conflict/deletion dialogs
@@ -95,6 +128,64 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
         ref.read(autosaveProvider.notifier).saveAllDirty();
       });
 
+      // Save/restore scroll offsets on tab switch
+      ref.listenManual<String?>(
+        tabManagerProvider.select((s) => s.activeTabId),
+        (prevId, nextId) {
+          _suppressScrollSync = true;
+          // Save outgoing tab's scroll offsets
+          if (prevId != null && prevId != nextId) {
+            final prevViewer = _viewerScrollControllers[prevId];
+            if (prevViewer != null && prevViewer.hasClients) {
+              _viewerScrollOffsets[prevId] = prevViewer.offset;
+            }
+            final prevEditor = _editorScrollControllers[prevId];
+            if (prevEditor != null && prevEditor.hasClients) {
+              _editorScrollOffsets[prevId] = prevEditor.offset;
+            }
+          }
+          // Restore incoming tab's scroll offsets after the frame builds.
+          // For new tabs (no saved offset), explicitly jump to 0 to avoid
+          // inheriting the outgoing tab's position during the transition.
+          if (nextId != null && nextId != prevId) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              final viewer = _viewerScrollControllers[nextId];
+              if (viewer != null && viewer.hasClients) {
+                final savedViewer = _viewerScrollOffsets[nextId];
+                final max = viewer.position.maxScrollExtent;
+                viewer.jumpTo(savedViewer?.clamp(0.0, max) ?? 0);
+              }
+              final editor = _editorScrollControllers[nextId];
+              if (editor != null && editor.hasClients) {
+                final savedEditor = _editorScrollOffsets[nextId];
+                final max = editor.position.maxScrollExtent;
+                editor.jumpTo(savedEditor?.clamp(0.0, max) ?? 0);
+              }
+              _suppressScrollSync = false;
+            });
+          } else {
+            _suppressScrollSync = false;
+          }
+        },
+      );
+
+      // Clean up scroll controllers when tabs are closed
+      ref.listenManual(
+        tabManagerProvider.select((s) => s.tabIds.toSet()),
+        (Set<String>? prev, Set<String> next) {
+          if (prev == null) return;
+          final removed = prev.difference(next);
+          for (final id in removed) {
+            _codeScrollControllers.remove(id)?.dispose();
+            _editorHScrollControllers.remove(id)?.dispose();
+            _editorScrollControllers.remove(id)?.dispose();
+            _viewerScrollControllers.remove(id)?.dispose();
+            _editorScrollOffsets.remove(id);
+            _viewerScrollOffsets.remove(id);
+          }
+        },
+      );
+
       // Initialize app_links for single-instance file open
       ref.read(appLinksProvider.notifier).init(initialArgs);
     });
@@ -104,10 +195,22 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
   void dispose() {
     HardwareKeyboard.instance.removeHandler(_handleGlobalKeyEvent);
     _saveWindowStateTimer?.cancel();
-    _editorVerticalScroller.removeListener(_onEditorScroll);
-    _viewerScrollController.removeListener(_onViewerScroll);
-    _editorVerticalScroller.dispose();
-    _viewerScrollController.dispose();
+    for (final c in _codeScrollControllers.values) {
+      c.dispose();
+    }
+    _codeScrollControllers.clear();
+    for (final c in _editorHScrollControllers.values) {
+      c.dispose();
+    }
+    _editorHScrollControllers.clear();
+    for (final c in _editorScrollControllers.values) {
+      c.dispose();
+    }
+    for (final c in _viewerScrollControllers.values) {
+      c.dispose();
+    }
+    _editorScrollControllers.clear();
+    _viewerScrollControllers.clear();
     windowManager.removeListener(this);
     super.dispose();
   }
@@ -117,26 +220,36 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
   // ---------------------------------------------------------------------------
 
   void _onEditorScroll() {
-    if (_isSyncingScroll) return;
-    if (!_editorVerticalScroller.hasClients || !_viewerScrollController.hasClients) return;
-    final editorMax = _editorVerticalScroller.position.maxScrollExtent;
+    if (_isSyncingScroll || _suppressScrollSync) return;
+    final activeDoc = ref.read(activeDocumentProvider);
+    if (activeDoc == null) return;
+    final editor = _editorScrollControllers[activeDoc.id];
+    final viewer = _viewerScrollControllers[activeDoc.id];
+    if (editor == null || viewer == null) return;
+    if (!editor.hasClients || !viewer.hasClients) return;
+    final editorMax = editor.position.maxScrollExtent;
     if (editorMax <= 0) return;
-    final fraction = _editorVerticalScroller.offset / editorMax;
-    final viewerMax = _viewerScrollController.position.maxScrollExtent;
+    final fraction = editor.offset / editorMax;
+    final viewerMax = viewer.position.maxScrollExtent;
     _isSyncingScroll = true;
-    _viewerScrollController.jumpTo((fraction * viewerMax).clamp(0, viewerMax));
+    viewer.jumpTo((fraction * viewerMax).clamp(0, viewerMax));
     _isSyncingScroll = false;
   }
 
   void _onViewerScroll() {
-    if (_isSyncingScroll) return;
-    if (!_viewerScrollController.hasClients || !_editorVerticalScroller.hasClients) return;
-    final viewerMax = _viewerScrollController.position.maxScrollExtent;
+    if (_isSyncingScroll || _suppressScrollSync) return;
+    final activeDoc = ref.read(activeDocumentProvider);
+    if (activeDoc == null) return;
+    final viewer = _viewerScrollControllers[activeDoc.id];
+    final editor = _editorScrollControllers[activeDoc.id];
+    if (viewer == null || editor == null) return;
+    if (!viewer.hasClients || !editor.hasClients) return;
+    final viewerMax = viewer.position.maxScrollExtent;
     if (viewerMax <= 0) return;
-    final fraction = _viewerScrollController.offset / viewerMax;
-    final editorMax = _editorVerticalScroller.position.maxScrollExtent;
+    final fraction = viewer.offset / viewerMax;
+    final editorMax = editor.position.maxScrollExtent;
     _isSyncingScroll = true;
-    _editorVerticalScroller.jumpTo((fraction * editorMax).clamp(0, editorMax));
+    editor.jumpTo((fraction * editorMax).clamp(0, editorMax));
     _isSyncingScroll = false;
   }
 
@@ -845,10 +958,7 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
                           ref.read(tabManagerProvider.notifier)
                               .updateContent(activeDoc.id, content);
                         },
-                        scrollController: CodeScrollController(
-                          verticalScroller: _editorVerticalScroller,
-                          horizontalScroller: ScrollController(),
-                        ),
+                        scrollController: _codeScrollControllerFor(activeDoc.id),
                       ),
                     ),
                     viewer: Listener(
@@ -857,7 +967,7 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
                         key: _viewerKey,
                         content: activeDoc.content,
                         filePath: activeDoc.filePath,
-                        scrollController: _viewerScrollController,
+                        scrollController: _viewerControllerFor(activeDoc.id),
                       ),
                     ),
                   )

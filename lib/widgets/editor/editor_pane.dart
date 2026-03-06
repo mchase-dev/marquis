@@ -90,7 +90,12 @@ class EditorPaneState extends ConsumerState<EditorPane> {
   void didUpdateWidget(EditorPane oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.tabId != oldWidget.tabId) {
-      // Tab switch — swap to the stored (or new) controller
+      // Tab switch — suppress onChanged until after the frame completes.
+      // CodeEditor.didUpdateWidget fires during build when it receives the
+      // new controller, triggering notifyListeners → onChanged.
+      _isExternalUpdate = true;
+
+      // Swap to the stored (or new) controller
       final oldController = _controller;
       oldController.removeListener(_onControllerChanged);
       _findController.dispose();
@@ -106,6 +111,11 @@ class EditorPaneState extends ConsumerState<EditorPane> {
       _showFindBar = false;
       _showReplace = false;
 
+      // Update scroll controller if provided per-tab
+      if (widget.scrollController != null) {
+        _scrollController = widget.scrollController!;
+      }
+
       // Dispose old controller if its tab was closed (removed from map)
       if (!_controllers.containsValue(oldController)) {
         oldController.dispose();
@@ -113,10 +123,16 @@ class EditorPaneState extends ConsumerState<EditorPane> {
 
       // Sync content if it diverged while tab was inactive (e.g. file reload)
       if (_controller.text != widget.content) {
-        _isExternalUpdate = true;
         _controller.text = widget.content;
-        _isExternalUpdate = false;
       }
+
+      // Keep _isExternalUpdate true until after the frame — CodeEditor's
+      // didUpdateWidget fires during build when it receives the new controller,
+      // which triggers notifyListeners → onChanged.  Suppressing until the
+      // frame completes avoids modifying Riverpod state during build.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _isExternalUpdate = false;
+      });
     } else if (widget.content != oldWidget.content &&
         widget.content != _controller.text) {
       // Same tab, content changed externally (e.g. file reload)
