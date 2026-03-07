@@ -19,7 +19,11 @@ jobs:
 
       - run: flutter pub get
 
-      - run: flutter build windows --release
+      - name: Extract version from tag
+        run: echo "APP_VERSION=$("${{ github.ref_name }}".TrimStart("v"))" >> $env:GITHUB_ENV
+        shell: pwsh
+
+      - run: flutter build windows --release --dart-define=APP_VERSION=${{ env.APP_VERSION }} --build-name=${{ env.APP_VERSION }}
 
       - name: Archive Windows build
         run: Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath Marquis-windows.zip
