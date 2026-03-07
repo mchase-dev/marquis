@@ -1,4 +1,4 @@
-# Marquis
+# Marquis de Editeur
 
 **Marquis de Editeur, the Noble Markdown Editor** — a cross-platform desktop app for viewing and editing Markdown files. Marquis provides a split-view interface with a plain-text editor on the left and a live-rendered Markdown viewer on the right. It can also be used to simply view Markdown files without editing them.
 

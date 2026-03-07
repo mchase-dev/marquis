@@ -10,7 +10,8 @@ class AppConstants {
   static const String appTagline =
       'Marquis de Editeur, the Noble Markdown Editor';
   static const String bundleId = 'com.marquis.editor';
-  static const String version = '1.0.0';
+  static const String version =
+      String.fromEnvironment('APP_VERSION', defaultValue: 'dev');
 
   // Default accent color
   static const Color defaultAccentColor = Color(0xFF6C63FF);
